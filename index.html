@@ -1,0 +1,3227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Roller</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Roboto", sans-serif;
+    user-select: none;
+}
+
+button,
+input,
+textarea,
+select {
+    font-family: "Roboto", sans-serif;
+}
+
+#wrap {
+    position: relative;
+    height: 100vh;
+    max-width: 100vw;
+    display: grid;
+    place-items: center;
+}
+
+#game {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    outline: none;
+}
+
+#menu-bg-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#fade-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+#fade-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#popup-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 850;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+}
+
+#popup-backdrop.visible {
+    opacity: 0.75;
+}
+
+#level-complete-popup {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    z-index: 900;
+    width: min(520px, 88vw);
+    min-height: 390px;
+    padding: 72px 42px 58px;
+    background: #06468c;
+    border: 4px solid #00f2ff;
+    border-radius: 24px;
+    color: #fff;
+    text-align: center;
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-120vh) scale(0.9);
+    pointer-events: none;
+    transition:
+        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.35s ease;
+}
+
+#level-complete-popup.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+#level-complete-title {
+    margin: 0 0 52px;
+    font-family: "Press Start 2P", monospace;
+    font-size: clamp(24px, 5vw, 42px);
+    line-height: 1.35;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: #fff;
+    text-shadow: none;
+}
+
+#level-complete-exit {
+    min-width: 180px;
+    padding: 13px 30px;
+    background: #0877d8;
+    color: #fff;
+    border: 3px solid #00f2ff;
+    border-radius: 12px;
+    font-size: 21px;
+    font-weight: 900;
+    cursor: pointer;
+    outline: none;
+    box-shadow: none;
+    transition:
+        transform 0.1s ease,
+        background 0.1s ease;
+}
+
+#level-complete-exit:hover {
+    background: #0b8bed;
+}
+
+#level-complete-exit:active {
+    transform: translate(2px, 2px);
+}
+
+#menu-container {
+    position: fixed;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    width: 650px;
+    max-width: 90vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: #fff;
+}
+
+#logo-wrapper {
+    position: relative;
+    width: 500px;
+    max-width: 82vw;
+    margin-bottom: 25px;
+}
+
+@keyframes logoDropIn {
+    0% {
+        transform: translateY(-140vh) scale(0.9);
+        opacity: 0;
+    }
+
+    60% {
+        transform: translateY(18px) scale(1.015);
+        opacity: 1;
+    }
+
+    78% {
+        transform: translateY(-7px) scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+#menu-logo {
+    display: block;
+    width: 100%;
+    height: auto;
+    opacity: 0;
+    filter:
+        drop-shadow(0 6px 0 rgba(0, 0, 0, 0.8))
+        drop-shadow(0 0 22px rgba(255, 255, 255, 0.08));
+    animation: logoDropIn 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+#splash-text {
+    position: absolute;
+    right: -18px;
+    bottom: 80px;
+    color: #ffff55;
+    font-size: clamp(15px, 2.1vw, 24px);
+    font-weight: 900;
+    white-space: nowrap;
+    text-shadow:
+        2px 2px 0 #3a3a00,
+        3px 3px 0 rgba(0, 0, 0, 0.65);
+    transform: rotate(-8deg) scale(0.82);
+    opacity: 0;
+    transform-origin: center;
+    animation:
+        splashFadeIn
+        0.55s
+        cubic-bezier(0.22, 1, 0.36, 1)
+        1.05s
+        forwards;
+    pointer-events: none;
+}
+
+@keyframes splashFadeIn {
+    0% {
+        opacity: 0;
+        transform: rotate(-8deg) scale(0.82);
+    }
+
+    65% {
+        opacity: 1;
+        transform: rotate(-8deg) scale(1.08);
+    }
+
+    100% {
+        opacity: 1;
+        transform: rotate(-8deg) scale(1);
+    }
+}
+
+#level-cards-container {
+    width: 100%;
+    max-height: 420px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+    margin-bottom: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #fff #222;
+}
+
+#level-cards-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#level-cards-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#level-cards-container::-webkit-scrollbar-thumb {
+    background: #fff;
+}
+
+.level-card {
+    min-height: 96px;
+    background: rgba(15, 15, 15, 0.86);
+    border: 2px solid rgba(255, 255, 255, 0.92);
+    box-shadow:
+        4px 4px 0 #000,
+        0 0 18px rgba(255, 255, 255, 0.025);
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 20px;
+    transition:
+        transform 0.14s ease,
+        box-shadow 0.14s ease,
+        background 0.14s ease;
+}
+
+.level-card:hover {
+    background: rgba(34, 34, 34, 0.92);
+    box-shadow:
+        6px 6px 0 #000,
+        0 0 22px rgba(255, 255, 255, 0.07);
+}
+
+.level-preview {
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0;
+    background: #69a84f;
+    outline: 3px solid #000;
+    outline-offset: 0;
+    image-rendering: pixelated;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.level-card-info {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    font-size: 20px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    word-break: break-word;
+}
+
+.level-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-shrink: 0;
+}
+
+.menu-btn {
+    background: #333;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: 12px 24px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 4px 4px 0 #000;
+    transition:
+        transform 0.1s ease,
+        box-shadow 0.1s ease,
+        background 0.1s ease;
+}
+
+.menu-btn:hover {
+    background: #444;
+}
+
+.menu-btn:active {
+    box-shadow: none;
+    transform: translate(4px, 4px);
+}
+
+.level-card-btn {
+    background: #333;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: 10px 18px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 3px 3px 0 #000;
+    transition:
+        transform 0.1s ease,
+        box-shadow 0.1s ease,
+        background 0.1s ease;
+}
+
+.level-card-btn:hover {
+    background: #444;
+}
+
+.level-card-btn:active {
+    box-shadow: none;
+    transform: translate(1px, 2px);
+}
+
+.remove-card-btn {
+    border-color: #ff2020 !important;
+    color: #ff2020 !important;
+}
+
+.remove-card-btn:hover {
+    background: #441010 !important;
+}
+
+.menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    width: 100%;
+}
+
+.nav-btn {
+    position: fixed;
+    left: 20px;
+    z-index: 100;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: none;
+}
+
+#back-btn {
+    top: 0;
+}
+
+#back-btn img {
+    width: 150px;
+    height: 150px;
+    display: block;
+    object-fit: contain;
+}
+
+#restart-btn {
+    top: 150px;
+}
+
+#restart-btn img {
+    width: 100px;
+    height: 100px;
+    display: block;
+    object-fit: contain;
+}
+
+@media (max-width: 700px) {
+    #menu-container {
+        width: 94vw;
+        max-height: 90vh;
+        top: 47%;
+    }
+
+    #logo-wrapper {
+        width: 420px;
+        margin-bottom: 18px;
+    }
+
+    #splash-text {
+        right: -8px;
+        bottom: 0;
+        font-size: 15px;
+    }
+
+    #level-cards-container {
+        max-height: 52vh;
+        gap: 12px;
+    }
+
+    .level-card {
+        gap: 12px;
+        padding: 10px;
+    }
+
+    .level-preview {
+        width: 60px;
+        height: 60px;
+    }
+
+    .level-card-info {
+        font-size: 17px;
+    }
+
+    .level-card-actions {
+        gap: 6px;
+    }
+
+    .level-card-btn {
+        padding: 9px 12px;
+        font-size: 14px;
+    }
+
+    #back-btn img {
+        width: 115px;
+        height: 115px;
+    }
+
+    #restart-btn {
+        top: 115px;
+    }
+
+    #restart-btn img {
+        width: 80px;
+        height: 80px;
+    }
+
+    #level-complete-popup {
+        width: 88vw;
+        min-height: 330px;
+        padding: 55px 22px 45px;
+        border-radius: 20px;
+    }
+
+    #level-complete-title {
+        font-size: 24px;
+        margin-bottom: 42px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="menu-bg-canvas"></canvas>
+
+<div id="menu-container" style="display:none">
+    <div id="logo-wrapper">
+        <img src="assets/logo.png" alt="Cyber Roller" id="menu-logo">
+        <div id="splash-text"></div>
+    </div>
+
+    <div id="level-cards-container"></div>
+
+    <div class="menu-actions">
+        <button id="import-btn" class="menu-btn">Import Level Code</button>
+    </div>
+</div>
+
+<button id="back-btn" class="nav-btn" style="display:none" title="Back to Menu">
+    <img src="assets/back.png" alt="Back">
+</button>
+
+<button id="restart-btn" class="nav-btn" style="display:none" title="Restart Level">
+    <img src="assets/restart.png" alt="Restart">
+</button>
+
+<div id="wrap" style="display:none">
+    <canvas id="game" tabindex="0"></canvas>
+</div>
+
+<div id="popup-backdrop"></div>
+
+<div id="level-complete-popup" aria-hidden="true">
+    <h1 id="level-complete-title">Level Complete</h1>
+    <button id="level-complete-exit" type="button">Exit</button>
+</div>
+
+<div id="fade-overlay"></div>
+
+<script>
+(() => {
+"use strict";
+
+const wrap = document.getElementById("wrap");
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const menuBgCanvas = document.getElementById("menu-bg-canvas");
+const menuBgCtx = menuBgCanvas.getContext("2d");
+const menuContainer = document.getElementById("menu-container");
+const levelCardsContainer = document.getElementById("level-cards-container");
+const importBtn = document.getElementById("import-btn");
+const menuLogo = document.getElementById("menu-logo");
+const splashText = document.getElementById("splash-text");
+const backBtn = document.getElementById("back-btn");
+const restartBtn = document.getElementById("restart-btn");
+const fadeOverlay = document.getElementById("fade-overlay");
+const popupBackdrop = document.getElementById("popup-backdrop");
+const levelCompletePopup = document.getElementById("level-complete-popup");
+const levelCompleteExit = document.getElementById("level-complete-exit");
+
+const splashTexts = [
+    "Now in Javascript!",
+    "Yes, another one",
+    "The 4th Edition",
+    "123123123",
+    "Made by Lasokar!",
+    "Shoutout to WingItMan :)",
+    "In the World Wide Web...",
+    "y=mx+b",
+    "porting this everywhere atp"
+];
+
+function chooseSplashText() {
+    splashText.textContent = splashTexts[
+        Math.floor(Math.random() * splashTexts.length)
+    ];
+}
+
+let transitionBusy = false;
+
+function setFade(active, duration = 500) {
+    fadeOverlay.style.transition = `opacity ${duration}ms ease`;
+
+    if (active) {
+        fadeOverlay.classList.add("active");
+    } else {
+        void fadeOverlay.offsetWidth;
+        fadeOverlay.classList.remove("active");
+    }
+}
+
+function fadeToBlack(duration = 500) {
+    return new Promise(resolve => {
+        setFade(true, duration);
+        window.setTimeout(resolve, duration);
+    });
+}
+
+function fadeFromBlack(duration = 500) {
+    return new Promise(resolve => {
+        setFade(false, duration);
+        window.setTimeout(resolve, duration);
+    });
+}
+
+function showLevelCompletePopup() {
+    popupBackdrop.classList.add("visible");
+    levelCompletePopup.classList.add("visible");
+    levelCompletePopup.setAttribute("aria-hidden", "false");
+}
+
+function hideLevelCompletePopup() {
+    popupBackdrop.classList.remove("visible");
+    levelCompletePopup.classList.remove("visible");
+    levelCompletePopup.setAttribute("aria-hidden", "true");
+}
+
+const menuGrid = {
+    initialized: false,
+    lastTime: 0,
+    offsetX: 0,
+    offsetY: 0,
+    gridSize: 58,
+    speedX: 30,
+    speedY: 22
+};
+
+function resizeMenuBg() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    menuBgCanvas.width = Math.floor(window.innerWidth * dpr);
+    menuBgCanvas.height = Math.floor(window.innerHeight * dpr);
+    menuBgCanvas.style.width = `${window.innerWidth}px`;
+    menuBgCanvas.style.height = `${window.innerHeight}px`;
+
+    menuBgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+window.addEventListener("resize", resizeMenuBg);
+resizeMenuBg();
+
+function drawMenuBackground(now) {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    if (!menuGrid.initialized) {
+        menuGrid.initialized = true;
+        menuGrid.lastTime = now;
+    }
+
+    let delta = (now - menuGrid.lastTime) / 1000;
+    menuGrid.lastTime = now;
+    delta = Math.min(delta, 0.05);
+
+    if (state === "menu") {
+        menuGrid.offsetX += menuGrid.speedX * delta;
+        menuGrid.offsetY += menuGrid.speedY * delta;
+        menuGrid.offsetX %= menuGrid.gridSize;
+        menuGrid.offsetY %= menuGrid.gridSize;
+
+        menuBgCtx.fillStyle = "#000";
+        menuBgCtx.fillRect(0, 0, width, height);
+
+        const planeWidth = width * 3;
+        const planeHeight = height * 3;
+        const shearX = -0.035;
+        const shearY = 0.055;
+        const translateX = -width * 0.85;
+        const translateY = -height * 0.85;
+
+        menuBgCtx.save();
+        menuBgCtx.setTransform(
+            1,
+            shearY,
+            shearX,
+            1,
+            translateX,
+            translateY
+        );
+
+        const gridSize = menuGrid.gridSize;
+        const startX = -gridSize + menuGrid.offsetX;
+        const startY = -gridSize + menuGrid.offsetY;
+
+        const verticalCount =
+            Math.ceil((planeWidth + width) / gridSize) + 10;
+
+        const horizontalCount =
+            Math.ceil((planeHeight + height) / gridSize) + 10;
+
+        menuBgCtx.lineWidth = 1.25;
+        menuBgCtx.strokeStyle = "rgba(255,255,255,0.14)";
+
+        for (let i = 0; i < verticalCount; i++) {
+            const x = startX + i * gridSize;
+
+            menuBgCtx.beginPath();
+            menuBgCtx.moveTo(x, startY);
+            menuBgCtx.lineTo(x, startY + planeHeight);
+            menuBgCtx.stroke();
+        }
+
+        for (let i = 0; i < horizontalCount; i++) {
+            const y = startY + i * gridSize;
+
+            menuBgCtx.beginPath();
+            menuBgCtx.moveTo(startX, y);
+            menuBgCtx.lineTo(startX + planeWidth, y);
+            menuBgCtx.stroke();
+        }
+
+        menuBgCtx.restore();
+
+        const vignette = menuBgCtx.createRadialGradient(
+            width * 0.5,
+            height * 0.46,
+            height * 0.08,
+            width * 0.5,
+            height * 0.46,
+            Math.max(width, height) * 0.82
+        );
+
+        vignette.addColorStop(0, "rgba(0,0,0,0.02)");
+        vignette.addColorStop(0.55, "rgba(0,0,0,0.08)");
+        vignette.addColorStop(1, "rgba(0,0,0,0.42)");
+
+        menuBgCtx.fillStyle = vignette;
+        menuBgCtx.fillRect(0, 0, width, height);
+    } else {
+        menuBgCtx.clearRect(0, 0, width, height);
+    }
+
+    requestAnimationFrame(drawMenuBackground);
+}
+
+requestAnimationFrame(drawMenuBackground);
+
+const menuMusic = new Audio("sound/menu.mp3");
+const backgroundMusic = new Audio("sound/bg.mp3");
+const startSound = new Audio("sound/start.mp3");
+const moveSound = new Audio("sound/move.wav");
+const loseSound = new Audio("sound/lose.wav");
+const winSound = new Audio("sound/win.wav");
+const teleportSound = new Audio("sound/tp.wav");
+const coinSound = new Audio("sound/coin.mp3");
+
+menuMusic.loop = true;
+backgroundMusic.loop = true;
+
+menuMusic.volume = 0.5;
+backgroundMusic.volume = 1;
+startSound.volume = 1;
+moveSound.volume = 1;
+loseSound.volume = 1;
+winSound.volume = 0.5;
+teleportSound.volume = 0.2;
+coinSound.volume = 0.2;
+
+function stopMenuMusic() {
+    menuMusic.pause();
+    menuMusic.currentTime = 0;
+}
+
+function stopBackgroundMusic() {
+    backgroundMusic.pause();
+    backgroundMusic.currentTime = 0;
+}
+
+function playMenuMusic() {
+    stopBackgroundMusic();
+    menuMusic.play().catch(() => {});
+}
+
+function playBackgroundMusic() {
+    stopMenuMusic();
+    backgroundMusic.currentTime = 0;
+    backgroundMusic.play().catch(() => {});
+}
+
+function playStartSound() {
+    startSound.currentTime = 0;
+    startSound.play().catch(() => {});
+}
+
+function playSound(audio) {
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+}
+
+let ROWS = 14;
+let COLS = 14;
+
+const GRID_X = 45;
+const GRID_Y = 16;
+const CELL = 85;
+const GAP = 5;
+const PITCH = CELL + GAP;
+
+const MOVE_TIME = 95;
+const FADE_TIME = 500;
+const DEATH_DELAY = 1000;
+const BLACK_FADE_TIME = 500;
+
+const COLORS = {
+    background: "#000000",
+    floor: "#69a84f",
+    wall: "#00f2ff",
+    goal: "#f8ff00",
+    ball: "#ff0000",
+    void: "#000000",
+    teleportOrange: "#ff8c00",
+    teleportPurple: "#aa00ff",
+    teleportLime: "#7cff00",
+    teleportRed: "#ff2020",
+    pushBlock: "#0a00ff",
+    pinkPushBlock: "#ff2f9d"
+};
+
+let walls = new Set();
+let coins = new Set();
+let coinBlocks = new Map();
+let voidBlocks = new Set();
+let pushBlocks = new Set();
+let pinkPushBlocks = new Set();
+let ramps = new Map();
+let teleporterMap = new Map();
+
+let orangeTps = [];
+let purpleTps = [];
+let limeTps = [];
+let redTps = [];
+
+let goal = { r: 0, c: 0 };
+let start = { r: 0, c: 0 };
+let coinsCollected = 0;
+
+const directions = {
+    ArrowUp: { dr: -1, dc: 0 },
+    ArrowDown: { dr: 1, dc: 0 },
+    ArrowLeft: { dr: 0, dc: -1 },
+    ArrowRight: { dr: 0, dc: 1 }
+};
+
+const keyToDir = {
+    ArrowUp: directions.ArrowUp,
+    ArrowDown: directions.ArrowDown,
+    ArrowLeft: directions.ArrowLeft,
+    ArrowRight: directions.ArrowRight,
+    KeyW: directions.ArrowUp,
+    KeyS: directions.ArrowDown,
+    KeyA: directions.ArrowLeft,
+    KeyD: directions.ArrowRight,
+    w: directions.ArrowUp,
+    W: directions.ArrowUp,
+    s: directions.ArrowDown,
+    S: directions.ArrowDown,
+    a: directions.ArrowLeft,
+    A: directions.ArrowLeft,
+    d: directions.ArrowRight,
+    D: directions.ArrowRight
+};
+
+let ball = { r: 0, c: 0 };
+let direction = directions.ArrowRight;
+let moving = false;
+let state = "menu";
+
+let drawR = 0;
+let drawC = 0;
+let fromR = 0;
+let fromC = 0;
+let toR = 0;
+let toC = 0;
+let moveStart = 0;
+
+let fadeStart = 0;
+let pendingState = null;
+
+let deathFadeStart = 0;
+let deathWaitStart = 0;
+let deathBlackStart = 0;
+
+let currentLevelCode = "";
+
+let pushingBlock = false;
+let pushBlockKey = null;
+let pushingPinkBlock = false;
+
+let pushBallFromR = 0;
+let pushBallFromC = 0;
+let pushBallToR = 0;
+let pushBallToC = 0;
+
+let pushBlockFromR = 0;
+let pushBlockFromC = 0;
+let pushBlockToR = 0;
+let pushBlockToC = 0;
+
+let pushMoveStart = 0;
+
+let rampTurning = false;
+let rampFromR = 0;
+let rampFromC = 0;
+let rampControlR = 0;
+let rampControlC = 0;
+let rampToR = 0;
+let rampToC = 0;
+let rampMoveStart = 0;
+
+let levels = [];
+let builtInCount = 0;
+let currentLevelIndex = 0;
+
+async function loadLevelsData() {
+    try {
+        const res = await fetch("assets/all_levels.json");
+
+        if (res.ok) {
+            const data = await res.json();
+            levels = Array.isArray(data) ? data : [];
+        } else {
+            levels = [];
+        }
+    } catch (err) {
+        console.warn(
+            "Could not fetch assets/all_levels.json. Check CORS or file paths.",
+            err
+        );
+
+        levels = [];
+    }
+
+    builtInCount = levels.length;
+    refreshLevelList();
+    renderLevelCards();
+}
+
+function refreshLevelList() {
+    levels = levels.slice(0, builtInCount);
+
+    let customLevels = [];
+
+    try {
+        customLevels = JSON.parse(
+            localStorage.getItem("cyberRollerCustom") || "[]"
+        );
+    } catch {
+        customLevels = [];
+    }
+
+    if (!Array.isArray(customLevels)) {
+        customLevels = [];
+    }
+
+    customLevels.forEach((code, index) => {
+        levels.push({
+            name: `Custom Level ${index + 1}`,
+            data: code,
+            isCustom: true
+        });
+    });
+}
+
+function isValidLevelCode(codeStr) {
+    if (!codeStr || typeof codeStr !== "string") {
+        return false;
+    }
+
+    const rawParts = codeStr.trim().split(/\s+/);
+
+    if (rawParts.length < 3) {
+        return false;
+    }
+
+    const parts = rawParts.map(Number);
+    const h = parts.pop();
+    const w = parts.pop();
+
+    if (
+        !Number.isFinite(h) ||
+        !Number.isFinite(w) ||
+        h <= 0 ||
+        w <= 0
+    ) {
+        return false;
+    }
+
+    if (parts.length !== h * w) {
+        return false;
+    }
+
+    let hasStart = false;
+    let hasGoal = false;
+
+    for (let i = 0; i < parts.length; i++) {
+        if (!Number.isFinite(parts[i])) {
+            return false;
+        }
+
+        if (parts[i] === 15) {
+            hasStart = true;
+        }
+
+        if (parts[i] === 3) {
+            hasGoal = true;
+        }
+    }
+
+    return hasStart && hasGoal;
+}
+
+function drawMiniPreviewCell(
+    pCtx,
+    x,
+    y,
+    width,
+    height,
+    color
+) {
+    pCtx.fillStyle = color;
+    pCtx.fillRect(x, y, width, height);
+    pCtx.strokeStyle = "#000";
+    pCtx.lineWidth = 0.1;
+
+    pCtx.strokeRect(
+        x + 0.05,
+        y + 0.05,
+        Math.max(0, width - 0.25),
+        Math.max(0, height - 0.25)
+    );
+}
+
+function drawMiniPreview(previewCanvas, codeStr) {
+    const pCtx = previewCanvas.getContext("2d");
+    const width = previewCanvas.width;
+    const height = previewCanvas.height;
+
+    pCtx.imageSmoothingEnabled = false;
+    pCtx.clearRect(0, 0, width, height);
+
+    pCtx.fillStyle = COLORS.floor;
+    pCtx.fillRect(0, 0, width, height);
+
+    if (!codeStr || typeof codeStr !== "string") {
+        return;
+    }
+
+    const rawParts = codeStr.trim().split(/\s+/);
+
+    if (rawParts.length < 2) {
+        return;
+    }
+
+    const parts = rawParts.map(Number);
+    const h = parts.pop();
+    const w = parts.pop();
+
+    if (
+        !Number.isFinite(h) ||
+        !Number.isFinite(w) ||
+        h <= 0 ||
+        w <= 0
+    ) {
+        return;
+    }
+
+    const cellW = width / w;
+    const cellH = height / h;
+
+    for (let i = 0; i < parts.length; i++) {
+        const r = Math.floor(i / w);
+        const c = i % w;
+
+        if (r >= h || c >= w) {
+            continue;
+        }
+
+        const id = parts[i];
+        let color = COLORS.floor;
+
+        if (id === 0) color = COLORS.floor;
+        else if (id === 2) color = COLORS.wall;
+        else if (id === 3) color = COLORS.goal;
+        else if (id === 4) color = "#f6b265";
+        else if (id >= 5 && id <= 9) color = "#9c9e9c";
+        else if (id === 10) color = COLORS.teleportOrange;
+        else if (id === 11) color = COLORS.teleportPurple;
+        else if (id === 12) color = COLORS.void;
+        else if (id === 13) color = COLORS.pushBlock;
+        else if (id === 14) color = COLORS.pinkPushBlock;
+        else if (id >= 16 && id <= 19) color = "#b35f00";
+        else if (id === 20) color = COLORS.teleportLime;
+        else if (id === 21) color = COLORS.teleportRed;
+        else if (id === 15) color = COLORS.ball;
+
+        drawMiniPreviewCell(
+            pCtx,
+            c * cellW,
+            r * cellH,
+            cellW,
+            cellH,
+            color
+        );
+    }
+}
+
+function renderLevelCards() {
+    levelCardsContainer.innerHTML = "";
+
+    if (levels.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "level-card";
+        empty.innerHTML =
+            `<div class="level-card-info">No levels found.</div>`;
+
+        levelCardsContainer.appendChild(empty);
+        return;
+    }
+
+    levels.forEach((lvl, index) => {
+        const card = document.createElement("div");
+        card.className = "level-card";
+
+        const previewCanvas = document.createElement("canvas");
+        previewCanvas.className = "level-preview";
+        previewCanvas.width = 70;
+        previewCanvas.height = 70;
+
+        const info = document.createElement("div");
+        info.className = "level-card-info";
+        info.textContent = lvl.name || `Level ${index + 1}`;
+
+        const actions = document.createElement("div");
+        actions.className = "level-card-actions";
+
+        const playCardBtn = document.createElement("button");
+        playCardBtn.className = "level-card-btn";
+        playCardBtn.textContent = "Play";
+
+        playCardBtn.addEventListener("click", () => {
+            if (transitionBusy) {
+                return;
+            }
+
+            currentLevelIndex = index;
+
+            if (
+                lvl &&
+                typeof lvl.data === "string" &&
+                lvl.data.trim()
+            ) {
+                enterLevel(lvl.data);
+            }
+        });
+
+        actions.appendChild(playCardBtn);
+
+        if (lvl.isCustom) {
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className =
+                "level-card-btn remove-card-btn";
+            deleteBtn.textContent = "Delete";
+
+            deleteBtn.addEventListener("click", () => {
+                if (transitionBusy) {
+                    return;
+                }
+
+                currentLevelIndex = index;
+
+                if (
+                    !confirm(
+                        "Are you sure you want to delete this level? This can't be undone!"
+                    )
+                ) {
+                    return;
+                }
+
+                let customLevels = [];
+
+                try {
+                    customLevels = JSON.parse(
+                        localStorage.getItem(
+                            "cyberRollerCustom"
+                        ) || "[]"
+                    );
+                } catch {
+                    customLevels = [];
+                }
+
+                if (!Array.isArray(customLevels)) {
+                    customLevels = [];
+                }
+
+                const customIndex =
+                    currentLevelIndex - builtInCount;
+
+                if (
+                    customIndex >= 0 &&
+                    customIndex < customLevels.length
+                ) {
+                    customLevels.splice(customIndex, 1);
+                }
+
+                localStorage.setItem(
+                    "cyberRollerCustom",
+                    JSON.stringify(customLevels)
+                );
+
+                refreshLevelList();
+                renderLevelCards();
+            });
+
+            actions.appendChild(deleteBtn);
+        }
+
+        card.appendChild(previewCanvas);
+        card.appendChild(info);
+        card.appendChild(actions);
+
+        if (typeof lvl.data === "string") {
+            drawMiniPreview(
+                previewCanvas,
+                lvl.data
+            );
+        }
+
+        levelCardsContainer.appendChild(card);
+    });
+}
+
+function restartLogoAnimation() {
+    chooseSplashText();
+
+    menuLogo.style.animation = "none";
+    splashText.style.animation = "none";
+
+    void menuLogo.offsetWidth;
+    void splashText.offsetWidth;
+
+    menuLogo.style.animation =
+        "logoDropIn 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards";
+
+    splashText.style.animation =
+        "splashFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.95s forwards";
+}
+
+function showMenu() {
+    state = "menu";
+
+    hideLevelCompletePopup();
+    stopBackgroundMusic();
+    playMenuMusic();
+
+    menuBgCanvas.style.display = "block";
+    menuContainer.style.display = "flex";
+    backBtn.style.display = "none";
+    restartBtn.style.display = "none";
+    wrap.style.display = "none";
+
+    restartLogoAnimation();
+    renderLevelCards();
+}
+
+function showGame(codeStr) {
+    hideLevelCompletePopup();
+
+    menuBgCanvas.style.display = "none";
+    menuContainer.style.display = "none";
+    backBtn.style.display = "block";
+    restartBtn.style.display = "block";
+    wrap.style.display = "grid";
+
+    loadLevel(codeStr);
+}
+
+async function enterLevel(codeStr) {
+    if (transitionBusy) {
+        return;
+    }
+
+    transitionBusy = true;
+    playStartSound();
+
+    await fadeToBlack(500);
+    showGame(codeStr);
+    await fadeFromBlack(500);
+
+    transitionBusy = false;
+}
+
+async function exitLevel() {
+    if (transitionBusy) {
+        return;
+    }
+
+    transitionBusy = true;
+    hideLevelCompletePopup();
+    playStartSound();
+
+    await fadeToBlack(500);
+    showMenu();
+    await fadeFromBlack(500);
+
+    transitionBusy = false;
+}
+
+importBtn.addEventListener("click", () => {
+    if (transitionBusy) {
+        return;
+    }
+
+    playMenuMusic();
+
+    const code = prompt("Paste level code here:");
+
+    if (!code || !code.trim()) {
+        return;
+    }
+
+    const trimmed = code.trim();
+
+    if (!isValidLevelCode(trimmed)) {
+        alert(
+            "Invalid level code.\n\n" +
+            "The code must contain a valid grid, width, height, " +
+            "a start tile and a goal tile."
+        );
+
+        return;
+    }
+
+    let customLevels = [];
+
+    try {
+        customLevels = JSON.parse(
+            localStorage.getItem(
+                "cyberRollerCustom"
+            ) || "[]"
+        );
+    } catch {
+        customLevels = [];
+    }
+
+    if (!Array.isArray(customLevels)) {
+        customLevels = [];
+    }
+
+    customLevels.push(trimmed);
+
+    localStorage.setItem(
+        "cyberRollerCustom",
+        JSON.stringify(customLevels)
+    );
+
+    refreshLevelList();
+    renderLevelCards();
+
+    const newCard =
+        levelCardsContainer.lastElementChild;
+
+    if (newCard) {
+        newCard.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+        });
+    }
+});
+
+function parseLevel(codeStr) {
+    const parts =
+        codeStr
+            .trim()
+            .split(/\s+/)
+            .map(Number);
+
+    if (parts.length < 2) {
+        return;
+    }
+
+    const h = parts.pop();
+    const w = parts.pop();
+
+    ROWS = h;
+    COLS = w;
+
+    walls.clear();
+    coins.clear();
+    coinBlocks.clear();
+    voidBlocks.clear();
+    pushBlocks.clear();
+    pinkPushBlocks.clear();
+    ramps.clear();
+    teleporterMap.clear();
+
+    orangeTps = [];
+    purpleTps = [];
+    limeTps = [];
+    redTps = [];
+
+    coinsCollected = 0;
+    start = { r: 0, c: 0 };
+    goal = { r: 0, c: 0 };
+
+    for (let i = 0; i < parts.length; i++) {
+        const r = Math.floor(i / w);
+        const c = i % w;
+        const id = parts[i];
+        const key = `${r},${c}`;
+
+        if (id === 2) {
+            walls.add(key);
+        } else if (id === 3) {
+            goal.r = r;
+            goal.c = c;
+        } else if (id === 4) {
+            coins.add(key);
+        } else if (id >= 5 && id <= 9) {
+            coinBlocks.set(key, id - 4);
+        } else if (id === 10) {
+            teleporterMap.set(key, 10);
+            orangeTps.push({ r, c, key });
+        } else if (id === 11) {
+            teleporterMap.set(key, 11);
+            purpleTps.push({ r, c, key });
+        } else if (id === 12) {
+            voidBlocks.add(key);
+        } else if (id === 13) {
+            pushBlocks.add(key);
+        } else if (id === 14) {
+            pinkPushBlocks.add(key);
+        } else if (id >= 16 && id <= 19) {
+            ramps.set(key, id);
+        } else if (id === 20) {
+            teleporterMap.set(key, 20);
+            limeTps.push({ r, c, key });
+        } else if (id === 21) {
+            teleporterMap.set(key, 21);
+            redTps.push({ r, c, key });
+        } else if (id === 15) {
+            start.r = r;
+            start.c = c;
+        }
+    }
+}
+
+function updateCanvasSize() {
+    canvas.width =
+        GRID_X * 2 +
+        COLS * PITCH -
+        GAP;
+
+    canvas.height =
+        GRID_Y * 2 +
+        ROWS * PITCH -
+        GAP;
+
+    wrap.style.aspectRatio =
+        `${canvas.width}/${canvas.height}`;
+}
+
+function loadLevel(codeStr) {
+    currentLevelCode = codeStr;
+    parseLevel(codeStr);
+    updateCanvasSize();
+    reset();
+}
+
+function isInside(r, c) {
+    return (
+        r >= 0 &&
+        r < ROWS &&
+        c >= 0 &&
+        c < COLS
+    );
+}
+
+function isWall(r, c) {
+    const key = `${r},${c}`;
+
+    if (walls.has(key)) {
+        return true;
+    }
+
+    if (
+        coinBlocks.has(key) &&
+        coinsCollected < coinBlocks.get(key)
+    ) {
+        return true;
+    }
+
+    return false;
+}
+
+function cellXY(r, c) {
+    return {
+        x: GRID_X + c * PITCH,
+        y: GRID_Y + r * PITCH
+    };
+}
+
+function centerXY(r, c) {
+    const p = cellXY(r, c);
+
+    return {
+        x: p.x + CELL / 2,
+        y: p.y + CELL / 2
+    };
+}
+
+function drawCell(r, c, fill) {
+    const { x, y } = cellXY(r, c);
+
+    ctx.fillStyle = "#000";
+    ctx.fillRect(x, y, CELL, CELL);
+
+    ctx.fillStyle = fill;
+    ctx.fillRect(
+        x + 2,
+        y + 2,
+        CELL - 4,
+        CELL - 4
+    );
+}
+
+function drawPushBlock(r, c, color) {
+    const { x, y } = cellXY(r, c);
+
+    ctx.fillStyle = "#000";
+    ctx.fillRect(x, y, CELL, CELL);
+
+    ctx.fillStyle = color;
+    ctx.fillRect(
+        x + 2,
+        y + 2,
+        CELL - 4,
+        CELL - 4
+    );
+
+    ctx.fillStyle = "#fff";
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 8;
+    ctx.lineCap = "square";
+    ctx.lineJoin = "miter";
+
+    const cx = x + CELL / 2;
+    const cy = y + CELL / 2;
+    const len = 18;
+    const head = 12;
+    const tip = 20;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - len);
+    ctx.lineTo(cx, cy + len);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - len - tip);
+    ctx.lineTo(cx - head, cy - len);
+    ctx.lineTo(cx + head, cy - len);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + len + tip);
+    ctx.lineTo(cx - head, cy + len);
+    ctx.lineTo(cx + head, cy + len);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx - len, cy);
+    ctx.lineTo(cx + len, cy);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(cx - len - tip, cy);
+    ctx.lineTo(cx - len, cy - head);
+    ctx.lineTo(cx - len, cy + head);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx + len + tip, cy);
+    ctx.lineTo(cx + len, cy - head);
+    ctx.lineTo(cx + len, cy + head);
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawRamp(r, c, id) {
+    const { x, y } = cellXY(r, c);
+
+    ctx.fillStyle = "#000";
+    ctx.fillRect(x, y, CELL, CELL);
+
+    ctx.fillStyle = COLORS.floor;
+    ctx.fillRect(
+        x + 2,
+        y + 2,
+        CELL - 4,
+        CELL - 4
+    );
+
+    ctx.fillStyle = "#b35f00";
+    ctx.beginPath();
+
+    if (id === 16) {
+        ctx.moveTo(x + 2, y + CELL - 2);
+        ctx.lineTo(x + CELL - 2, y + 2);
+        ctx.lineTo(x + CELL - 2, y + CELL - 2);
+    } else if (id === 17) {
+        ctx.moveTo(x + 2, y + 2);
+        ctx.lineTo(x + 2, y + CELL - 2);
+        ctx.lineTo(x + CELL - 2, y + CELL - 2);
+    } else if (id === 18) {
+        ctx.moveTo(x + 2, y + 2);
+        ctx.lineTo(x + CELL - 2, y + 2);
+        ctx.lineTo(x + CELL - 2, y + CELL - 2);
+    } else {
+        ctx.moveTo(x + 2, y + 2);
+        ctx.lineTo(x + CELL - 2, y + 2);
+        ctx.lineTo(x + 2, y + CELL - 2);
+    }
+
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#9a5200";
+    ctx.beginPath();
+
+    if (id === 16) {
+        ctx.moveTo(
+            x + CELL - 2,
+            y + CELL * 0.25
+        );
+        ctx.lineTo(
+            x + CELL * 0.75,
+            y + CELL * 0.75
+        );
+        ctx.lineTo(
+            x + CELL * 0.25,
+            y + CELL - 2
+        );
+        ctx.lineTo(
+            x + CELL - 2,
+            y + CELL - 2
+        );
+    } else if (id === 17) {
+        ctx.moveTo(
+            x + CELL * 0.75,
+            y + CELL - 2
+        );
+        ctx.lineTo(
+            x + CELL * 0.25,
+            y + CELL * 0.75
+        );
+        ctx.lineTo(
+            x + 2,
+            y + CELL * 0.25
+        );
+        ctx.lineTo(
+            x + 2,
+            y + CELL - 2
+        );
+    } else if (id === 18) {
+        ctx.moveTo(
+            x + CELL * 0.25,
+            y + 2
+        );
+        ctx.lineTo(
+            x + CELL * 0.75,
+            y + CELL * 0.25
+        );
+        ctx.lineTo(
+            x + CELL - 2,
+            y + CELL * 0.75
+        );
+        ctx.lineTo(
+            x + CELL - 2,
+            y + 2
+        );
+    } else {
+        ctx.moveTo(
+            x + 2,
+            y + CELL * 0.75
+        );
+        ctx.lineTo(
+            x + CELL * 0.25,
+            y + CELL * 0.25
+        );
+        ctx.lineTo(
+            x + CELL * 0.75,
+            y + 2
+        );
+        ctx.lineTo(
+            x + 2,
+            y + 2
+        );
+    }
+
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+
+    if (id === 16 || id === 19) {
+        ctx.moveTo(
+            x + 2,
+            y + CELL - 2
+        );
+        ctx.lineTo(
+            x + CELL - 2,
+            y + 2
+        );
+    } else {
+        ctx.moveTo(
+            x + 2,
+            y + 2
+        );
+        ctx.lineTo(
+            x + CELL - 2,
+            y + CELL - 2
+        );
+    }
+
+    ctx.stroke();
+}
+
+function teleporterColor(type) {
+    if (type === 10) {
+        return COLORS.teleportOrange;
+    }
+
+    if (type === 11) {
+        return COLORS.teleportPurple;
+    }
+
+    if (type === 20) {
+        return COLORS.teleportLime;
+    }
+
+    return COLORS.teleportRed;
+}
+
+function teleporterList(type) {
+    if (type === 10) {
+        return orangeTps;
+    }
+
+    if (type === 11) {
+        return purpleTps;
+    }
+
+    if (type === 20) {
+        return limeTps;
+    }
+
+    return redTps;
+}
+
+function drawTeleporter(r, c, color) {
+    const { x, y } = cellXY(r, c);
+
+    ctx.fillStyle = "#000";
+    ctx.fillRect(x, y, CELL, CELL);
+
+    ctx.fillStyle = color;
+    ctx.fillRect(
+        x + 2,
+        y + 2,
+        CELL - 4,
+        CELL - 4
+    );
+
+    ctx.fillStyle = "#fff";
+
+    const s = CELL * 0.5;
+    const o = (CELL - s) / 2;
+
+    ctx.fillRect(
+        x + o,
+        y + o,
+        s,
+        s
+    );
+}
+
+function drawCoinBlock(r, c, n) {
+    const { x, y } = cellXY(r, c);
+    const b = 4;
+
+    ctx.fillStyle = "#4a524a";
+    ctx.fillRect(x, y, CELL, CELL);
+
+    ctx.fillStyle = "#9c9e9c";
+    ctx.fillRect(
+        x + b,
+        y + b,
+        CELL - b * 2,
+        CELL - b * 2
+    );
+
+    const cx = x + CELL / 2;
+    const cy = y + CELL / 2;
+
+    ctx.beginPath();
+    ctx.arc(
+        cx,
+        cy,
+        33,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = "#e36362";
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(
+        cx,
+        cy,
+        29,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = "#f6b265";
+    ctx.fill();
+
+    ctx.fillStyle = "#f00";
+    ctx.font = "700 46px serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(
+        n,
+        cx,
+        cy + 3
+    );
+}
+
+function drawCoin(r, c, now) {
+    const { x, y } = centerXY(r, c);
+    const sx = Math.max(
+        0.1,
+        Math.abs(Math.cos(now / 150))
+    );
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(sx, 1);
+
+    ctx.beginPath();
+    ctx.arc(
+        0,
+        0,
+        28,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = "#e36362";
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(
+        0,
+        0,
+        24,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = "#f6b265";
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function drawBoard(now) {
+    ctx.fillStyle = COLORS.background;
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const key = `${r},${c}`;
+
+            if (
+                pushingBlock &&
+                key === pushBlockKey
+            ) {
+                drawCell(
+                    r,
+                    c,
+                    COLORS.floor
+                );
+
+                if (
+                    goal.r === r &&
+                    goal.c === c
+                ) {
+                    drawCell(
+                        r,
+                        c,
+                        COLORS.goal
+                    );
+                }
+
+                if (coins.has(key)) {
+                    drawCoin(
+                        r,
+                        c,
+                        now
+                    );
+                }
+
+                continue;
+            }
+
+            if (walls.has(key)) {
+                drawCell(
+                    r,
+                    c,
+                    COLORS.wall
+                );
+            } else if (
+                coinBlocks.has(key) &&
+                coinsCollected <
+                    coinBlocks.get(key)
+            ) {
+                drawCoinBlock(
+                    r,
+                    c,
+                    coinBlocks.get(key)
+                );
+            } else if (
+                pushBlocks.has(key)
+            ) {
+                drawPushBlock(
+                    r,
+                    c,
+                    COLORS.pushBlock
+                );
+            } else if (
+                pinkPushBlocks.has(key)
+            ) {
+                drawPushBlock(
+                    r,
+                    c,
+                    COLORS.pinkPushBlock
+                );
+            } else if (
+                ramps.has(key)
+            ) {
+                drawRamp(
+                    r,
+                    c,
+                    ramps.get(key)
+                );
+            } else if (
+                voidBlocks.has(key)
+            ) {
+                drawCell(
+                    r,
+                    c,
+                    COLORS.void
+                );
+            } else if (
+                teleporterMap.has(key)
+            ) {
+                drawTeleporter(
+                    r,
+                    c,
+                    teleporterColor(
+                        teleporterMap.get(key)
+                    )
+                );
+            } else {
+                drawCell(
+                    r,
+                    c,
+                    COLORS.floor
+                );
+
+                if (
+                    goal.r === r &&
+                    goal.c === c
+                ) {
+                    drawCell(
+                        r,
+                        c,
+                        COLORS.goal
+                    );
+                }
+
+                if (coins.has(key)) {
+                    drawCoin(
+                        r,
+                        c,
+                        now
+                    );
+                }
+            }
+        }
+    }
+
+    if (pushingBlock) {
+        const t = Math.min(
+            1,
+            (now - pushMoveStart) /
+                MOVE_TIME
+        );
+
+        const e = t * (2 - t);
+
+        drawPushBlock(
+            pushBlockFromR +
+                (pushBlockToR -
+                    pushBlockFromR) *
+                    e,
+            pushBlockFromC +
+                (pushBlockToC -
+                    pushBlockFromC) *
+                    e,
+            pushingPinkBlock
+                ? COLORS.pinkPushBlock
+                : COLORS.pushBlock
+        );
+    }
+}
+
+function drawBall() {
+    if (
+        state === "won" ||
+        state === "deadWait" ||
+        state === "deadBlack"
+    ) {
+        return;
+    }
+
+    const { x, y } =
+        centerXY(
+            drawR,
+            drawC
+        );
+
+    let alpha = 1;
+
+    if (
+        state === "deathFade" ||
+        state === "winFade"
+    ) {
+        const t = Math.min(
+            1,
+            (performance.now() -
+                fadeStart) /
+                FADE_TIME
+        );
+
+        alpha = Math.max(
+            0,
+            1 - t
+        );
+    }
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    ctx.beginPath();
+    ctx.arc(
+        x,
+        y,
+        44,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = "#000";
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(
+        x,
+        y,
+        37,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = COLORS.ball;
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function render(now) {
+    if (state === "menu") {
+        return;
+    }
+
+    drawBoard(now);
+    drawBall();
+}
+
+function reset() {
+    hideLevelCompletePopup();
+    parseLevel(currentLevelCode);
+
+    ball = {
+        ...start
+    };
+
+    drawR = ball.r;
+    drawC = ball.c;
+
+    fromR = ball.r;
+    fromC = ball.c;
+
+    toR = ball.r;
+    toC = ball.c;
+
+    moving = false;
+
+    pushingBlock = false;
+    pushBlockKey = null;
+    pushingPinkBlock = false;
+
+    rampTurning = false;
+
+    state = "playing";
+
+    fadeStart = 0;
+    pendingState = null;
+
+    deathFadeStart = 0;
+    deathWaitStart = 0;
+    deathBlackStart = 0;
+
+    direction =
+        directions.ArrowRight;
+
+    playBackgroundMusic();
+
+    render(
+        performance.now()
+    );
+
+    canvas.focus();
+}
+
+function beginFade(result, now) {
+    moving = false;
+
+    pushingBlock = false;
+    pushBlockKey = null;
+    pushingPinkBlock = false;
+
+    rampTurning = false;
+    fadeStart = now;
+    pendingState = result;
+
+    stopBackgroundMusic();
+
+    if (result === "dead") {
+        state = "deathFade";
+        deathFadeStart = now;
+        playSound(loseSound);
+    } else {
+        state = "winFade";
+        playSound(winSound);
+    }
+}
+
+function dieWait(now) {
+    state = "deadWait";
+    deathWaitStart = now;
+}
+
+function startDeathBlackFade(now) {
+    state = "deadBlack";
+    deathBlackStart = now;
+    setFade(true, BLACK_FADE_TIME);
+}
+
+function finishWin() {
+    state = "won";
+    showLevelCompletePopup();
+}
+
+function collectCoin(r, c) {
+    const key = `${r},${c}`;
+
+    if (!coins.has(key)) {
+        return false;
+    }
+
+    coins.delete(key);
+    coinsCollected++;
+
+    playSound(coinSound);
+
+    return true;
+}
+
+function canPushBlock(blockR, blockC, dir) {
+    const r = blockR + dir.dr;
+    const c = blockC + dir.dc;
+
+    if (!isInside(r, c)) {
+        return false;
+    }
+
+    const key = `${r},${c}`;
+
+    if (
+        pushBlocks.has(key) ||
+        pinkPushBlocks.has(key)
+    ) {
+        return false;
+    }
+
+    if (
+        walls.has(key) ||
+        voidBlocks.has(key) ||
+        ramps.has(key)
+    ) {
+        return false;
+    }
+
+    if (
+        goal.r === r &&
+        goal.c === c
+    ) {
+        return false;
+    }
+
+    if (
+        coinBlocks.has(key) &&
+        coinsCollected <
+            coinBlocks.get(key)
+    ) {
+        return false;
+    }
+
+    return true;
+}
+
+function startPush(
+    blockR,
+    blockC,
+    dir,
+    playMovementSound
+) {
+    const blockKey =
+        `${blockR},${blockC}`;
+
+    if (
+        !pushBlocks.has(blockKey) &&
+        !pinkPushBlocks.has(blockKey)
+    ) {
+        return false;
+    }
+
+    if (
+        !canPushBlock(
+            blockR,
+            blockC,
+            dir
+        )
+    ) {
+        return false;
+    }
+
+    const destinationR =
+        blockR + dir.dr;
+
+    const destinationC =
+        blockC + dir.dc;
+
+    pushingBlock = true;
+    moving = true;
+    pushBlockKey = blockKey;
+
+    pushingPinkBlock =
+        pinkPushBlocks.has(
+            blockKey
+        );
+
+    pushBallFromR = ball.r;
+    pushBallFromC = ball.c;
+
+    pushBallToR = blockR;
+    pushBallToC = blockC;
+
+    pushBlockFromR = blockR;
+    pushBlockFromC = blockC;
+
+    pushBlockToR =
+        destinationR;
+
+    pushBlockToC =
+        destinationC;
+
+    pushMoveStart =
+        performance.now();
+
+    if (playMovementSound) {
+        playSound(moveSound);
+    }
+
+    return true;
+}
+
+function finishPush(now) {
+    const oldBlockKey =
+        pushBlockKey;
+
+    const destinationKey =
+        `${pushBlockToR},${pushBlockToC}`;
+
+    const wasPink =
+        pushingPinkBlock;
+
+    if (
+        pinkPushBlocks.has(
+            oldBlockKey
+        )
+    ) {
+        pinkPushBlocks.delete(
+            oldBlockKey
+        );
+
+        pinkPushBlocks.add(
+            destinationKey
+        );
+    } else {
+        pushBlocks.delete(
+            oldBlockKey
+        );
+
+        pushBlocks.add(
+            destinationKey
+        );
+    }
+
+    ball.r =
+        pushBallToR;
+
+    ball.c =
+        pushBallToC;
+
+    drawR = ball.r;
+    drawC = ball.c;
+
+    collectCoin(
+        ball.r,
+        ball.c
+    );
+
+    pushingBlock = false;
+    moving = false;
+    pushBlockKey = null;
+    pushingPinkBlock = false;
+
+    if (wasPink) {
+        const nr =
+            ball.r +
+            direction.dr;
+
+        const nc =
+            ball.c +
+            direction.dc;
+
+        const nextKey =
+            `${nr},${nc}`;
+
+        if (
+            isInside(nr, nc) &&
+            pinkPushBlocks.has(
+                nextKey
+            ) &&
+            startPush(
+                nr,
+                nc,
+                direction,
+                false
+            )
+        ) {
+            render(now);
+            return;
+        }
+
+        const nextPinkKey =
+            `${pushBlockToR},${pushBlockToC}`;
+
+        if (
+            isInside(nr, nc) &&
+            canPushBlock(
+                pushBlockToR,
+                pushBlockToC,
+                direction
+            ) &&
+            pinkPushBlocks.has(
+                nextPinkKey
+            )
+        ) {
+            startPush(
+                pushBlockToR,
+                pushBlockToC,
+                direction,
+                false
+            );
+
+            render(now);
+            return;
+        }
+    }
+
+    render(now);
+}
+
+function rampTurnDirection(id, dir) {
+    if (id === 16) {
+        if (
+            dir ===
+            directions.ArrowDown
+        ) {
+            return directions.ArrowLeft;
+        }
+
+        if (
+            dir ===
+            directions.ArrowRight
+        ) {
+            return directions.ArrowUp;
+        }
+    } else if (id === 17) {
+        if (
+            dir ===
+            directions.ArrowDown
+        ) {
+            return directions.ArrowRight;
+        }
+
+        if (
+            dir ===
+            directions.ArrowLeft
+        ) {
+            return directions.ArrowUp;
+        }
+    } else if (id === 18) {
+        if (
+            dir ===
+            directions.ArrowUp
+        ) {
+            return directions.ArrowLeft;
+        }
+
+        if (
+            dir ===
+            directions.ArrowRight
+        ) {
+            return directions.ArrowDown;
+        }
+    } else if (id === 19) {
+        if (
+            dir ===
+            directions.ArrowUp
+        ) {
+            return directions.ArrowRight;
+        }
+
+        if (
+            dir ===
+            directions.ArrowLeft
+        ) {
+            return directions.ArrowDown;
+        }
+    }
+
+    return null;
+}
+
+function getRampTurn(r, c, dir) {
+    const id =
+        ramps.get(
+            `${r},${c}`
+        );
+
+    if (!id) {
+        return null;
+    }
+
+    return rampTurnDirection(
+        id,
+        dir
+    );
+}
+
+function startRampTurn(
+    r,
+    c,
+    newDir
+) {
+    rampTurning = true;
+    moving = true;
+    direction = newDir;
+
+    rampFromR = ball.r;
+    rampFromC = ball.c;
+
+    rampControlR = r;
+    rampControlC = c;
+
+    rampToR =
+        r + newDir.dr;
+
+    rampToC =
+        c + newDir.dc;
+
+    rampMoveStart =
+        performance.now();
+
+    playSound(moveSound);
+
+    return true;
+}
+
+function startNormalMove(
+    r,
+    c,
+    now
+) {
+    fromR = ball.r;
+    fromC = ball.c;
+
+    toR = r;
+    toC = c;
+
+    moveStart = now;
+    moving = true;
+}
+
+function handleArrival(now) {
+    ball.r = toR;
+    ball.c = toC;
+
+    collectCoin(
+        ball.r,
+        ball.c
+    );
+
+    let key =
+        `${ball.r},${ball.c}`;
+
+    if (
+        teleporterMap.has(key)
+    ) {
+        const type =
+            teleporterMap.get(
+                key
+            );
+
+        const list =
+            teleporterList(
+                type
+            );
+
+        let bestDist =
+            Infinity;
+
+        let bestTp =
+            null;
+
+        for (
+            const tp of list
+        ) {
+            if (
+                tp.key === key
+            ) {
+                continue;
+            }
+
+            const dist =
+                Math.pow(
+                    tp.r -
+                        ball.r,
+                    2
+                ) +
+                Math.pow(
+                    tp.c -
+                        ball.c,
+                    2
+                );
+
+            if (
+                dist <
+                bestDist
+            ) {
+                bestDist = dist;
+                bestTp = tp;
+            }
+        }
+
+        if (bestTp) {
+            ball.r = bestTp.r;
+            ball.c = bestTp.c;
+
+            drawR = ball.r;
+            drawC = ball.c;
+
+            key =
+                `${ball.r},${ball.c}`;
+
+            collectCoin(
+                ball.r,
+                ball.c
+            );
+
+            playSound(
+                teleportSound
+            );
+        }
+    }
+
+    const nr =
+        ball.r +
+        direction.dr;
+
+    const nc =
+        ball.c +
+        direction.dc;
+
+    const nextKey =
+        `${nr},${nc}`;
+
+    const nextRamp =
+        isInside(nr, nc) &&
+        ramps.has(nextKey);
+
+    const nextPush =
+        isInside(nr, nc) &&
+        (
+            pushBlocks.has(
+                nextKey
+            ) ||
+            pinkPushBlocks.has(
+                nextKey
+            )
+        );
+
+    const nextWall =
+        isInside(nr, nc) &&
+        isWall(nr, nc);
+
+    if (nextRamp) {
+        const newDir =
+            getRampTurn(
+                nr,
+                nc,
+                direction
+            );
+
+        if (newDir) {
+            startRampTurn(
+                nr,
+                nc,
+                newDir
+            );
+        } else {
+            moving = false;
+            drawR = ball.r;
+            drawC = ball.c;
+        }
+    } else if (nextPush) {
+        if (
+            !startPush(
+                nr,
+                nc,
+                direction,
+                false
+            )
+        ) {
+            moving = false;
+            drawR = ball.r;
+            drawC = ball.c;
+        }
+    } else if (nextWall) {
+        moving = false;
+        drawR = ball.r;
+        drawC = ball.c;
+    } else {
+        startNormalMove(
+            nr,
+            nc,
+            now
+        );
+    }
+}
+
+function launch(dir) {
+    if (
+        state !== "playing" ||
+        moving
+    ) {
+        return;
+    }
+
+    direction = dir;
+
+    const nr =
+        ball.r + dir.dr;
+
+    const nc =
+        ball.c + dir.dc;
+
+    if (
+        !isInside(nr, nc)
+    ) {
+        render(
+            performance.now()
+        );
+
+        return;
+    }
+
+    const nextKey =
+        `${nr},${nc}`;
+
+    if (
+        ramps.has(nextKey)
+    ) {
+        const newDir =
+            getRampTurn(
+                nr,
+                nc,
+                dir
+            );
+
+        if (newDir) {
+            startRampTurn(
+                nr,
+                nc,
+                newDir
+            );
+        } else {
+            render(
+                performance.now()
+            );
+        }
+
+        return;
+    }
+
+    if (
+        pushBlocks.has(
+            nextKey
+        ) ||
+        pinkPushBlocks.has(
+            nextKey
+        )
+    ) {
+        if (
+            !startPush(
+                nr,
+                nc,
+                dir,
+                true
+            )
+        ) {
+            render(
+                performance.now()
+            );
+        }
+
+        return;
+    }
+
+    if (
+        isWall(nr, nc)
+    ) {
+        render(
+            performance.now()
+        );
+
+        return;
+    }
+
+    fromR = ball.r;
+    fromC = ball.c;
+
+    toR = nr;
+    toC = nc;
+
+    moveStart =
+        performance.now();
+
+    moving = true;
+
+    playSound(moveSound);
+}
+
+function update(now) {
+    if (state !== "menu") {
+        if (rampTurning) {
+            const t =
+                Math.min(
+                    1,
+                    (now -
+                        rampMoveStart) /
+                        MOVE_TIME
+                );
+
+            const e =
+                t * t *
+                (3 - 2 * t);
+
+            drawR =
+                (1 - e) *
+                    (1 - e) *
+                    rampFromR +
+                2 *
+                    (1 - e) *
+                    e *
+                    rampControlR +
+                e *
+                    e *
+                    rampToR;
+
+            drawC =
+                (1 - e) *
+                    (1 - e) *
+                    rampFromC +
+                2 *
+                    (1 - e) *
+                    e *
+                    rampControlC +
+                e *
+                    e *
+                    rampToC;
+
+            if (t >= 1) {
+                ball.r = rampToR;
+                ball.c = rampToC;
+
+                drawR = ball.r;
+                drawC = ball.c;
+
+                rampTurning = false;
+
+                if (
+                    !isInside(
+                        ball.r,
+                        ball.c
+                    )
+                ) {
+                    beginFade(
+                        "dead",
+                        now
+                    );
+                } else if (
+                    goal.r === ball.r &&
+                    goal.c === ball.c
+                ) {
+                    beginFade(
+                        "won",
+                        now
+                    );
+                } else if (
+                    voidBlocks.has(
+                        `${ball.r},${ball.c}`
+                    )
+                ) {
+                    beginFade(
+                        "dead",
+                        now
+                    );
+                } else if (
+                    isWall(
+                        ball.r,
+                        ball.c
+                    )
+                ) {
+                    moving = false;
+
+                    render(now);
+                } else {
+                    toR = ball.r;
+                    toC = ball.c;
+
+                    handleArrival(now);
+                }
+            }
+        } else if (pushingBlock) {
+            const t =
+                (now -
+                    pushMoveStart) /
+                MOVE_TIME;
+
+            const et =
+                Math.min(
+                    1,
+                    t
+                );
+
+            const e =
+                et * (2 - et);
+
+            drawR =
+                pushBallFromR +
+                (
+                    pushBallToR -
+                    pushBallFromR
+                ) * e;
+
+            drawC =
+                pushBallFromC +
+                (
+                    pushBallToC -
+                    pushBallFromC
+                ) * e;
+
+            if (t >= 1) {
+                finishPush(now);
+            }
+        } else if (moving) {
+            const t =
+                (now -
+                    moveStart) /
+                MOVE_TIME;
+
+            const targetKey =
+                `${toR},${toC}`;
+
+            const isOut =
+                !isInside(
+                    toR,
+                    toC
+                );
+
+            const isVoid =
+                voidBlocks.has(
+                    targetKey
+                );
+
+            const isGoal =
+                goal.r === toR &&
+                goal.c === toC;
+
+            const isSpecial =
+                isOut ||
+                isVoid ||
+                isGoal;
+
+            const limit =
+                isSpecial
+                    ? 0.25
+                    : 1;
+
+            if (t >= limit) {
+                const et =
+                    isSpecial
+                        ? 0.25
+                        : 1;
+
+                const e =
+                    et * (2 - et);
+
+                drawR =
+                    fromR +
+                    (
+                        toR -
+                        fromR
+                    ) * e;
+
+                drawC =
+                    fromC +
+                    (
+                        toC -
+                        fromC
+                    ) * e;
+
+                if (isSpecial) {
+                    beginFade(
+                        isGoal
+                            ? "won"
+                            : "dead",
+                        now
+                    );
+                } else {
+                    handleArrival(now);
+                }
+            } else {
+                const e =
+                    t * (2 - t);
+
+                drawR =
+                    fromR +
+                    (
+                        toR -
+                        fromR
+                    ) * e;
+
+                drawC =
+                    fromC +
+                    (
+                        toC -
+                        fromC
+                    ) * e;
+            }
+        } else if (
+            state === "winFade"
+        ) {
+            const t =
+                Math.min(
+                    1,
+                    (now -
+                        fadeStart) /
+                        FADE_TIME
+                );
+
+            if (t >= 1) {
+                finishWin();
+            }
+        } else if (
+            state === "deathFade"
+        ) {
+            const t =
+                Math.min(
+                    1,
+                    (now -
+                        deathFadeStart) /
+                        FADE_TIME
+                );
+
+            if (t >= 1) {
+                dieWait(now);
+            }
+        } else if (
+            state === "deadWait"
+        ) {
+            if (
+                now -
+                    deathWaitStart >=
+                DEATH_DELAY
+            ) {
+                startDeathBlackFade(now);
+            }
+        } else if (
+            state === "deadBlack"
+        ) {
+            const t =
+                Math.min(
+                    1,
+                    (now -
+                        deathBlackStart) /
+                        BLACK_FADE_TIME
+                );
+
+            if (t >= 1) {
+                reset();
+                setFade(
+                    true,
+                    BLACK_FADE_TIME
+                );
+
+                requestAnimationFrame(
+                    () => {
+                        requestAnimationFrame(
+                            () => {
+                                fadeFromBlack(
+                                    BLACK_FADE_TIME
+                                );
+                            }
+                        );
+                    }
+                );
+            }
+        } else if (
+            state === "fading"
+        ) {
+            const t =
+                Math.min(
+                    1,
+                    (now -
+                        fadeStart) /
+                        FADE_TIME
+                );
+
+            if (
+                t >= 1 &&
+                pendingState === "won"
+            ) {
+                finishWin();
+            }
+        }
+
+        render(now);
+    }
+
+    requestAnimationFrame(update);
+}
+
+window.addEventListener(
+    "keydown",
+    event => {
+        if (
+            state === "menu" ||
+            state === "won" ||
+            state === "deadWait" ||
+            state === "deadBlack"
+        ) {
+            return;
+        }
+
+        const dir =
+            keyToDir[event.key] ||
+            keyToDir[event.code];
+
+        if (dir) {
+            event.preventDefault();
+
+            if (
+                !moving &&
+                state === "playing"
+            ) {
+                launch(dir);
+            }
+        }
+
+        if (
+            event.key === "r" ||
+            event.key === "R" ||
+            event.key === "Enter"
+        ) {
+            if (
+                state === "playing"
+            ) {
+                reset();
+            }
+        }
+    },
+    {
+        passive: false
+    }
+);
+
+backBtn.addEventListener(
+    "click",
+    () => {
+        if (
+            state === "won" ||
+            state === "deathFade" ||
+            state === "deadWait" ||
+            state === "deadBlack"
+        ) {
+            return;
+        }
+
+        exitLevel();
+    }
+);
+
+restartBtn.addEventListener(
+    "click",
+    () => {
+        if (
+            transitionBusy ||
+            state === "won" ||
+            state === "deathFade" ||
+            state === "deadWait" ||
+            state === "deadBlack"
+        ) {
+            return;
+        }
+
+        reset();
+        canvas.focus();
+    }
+);
+
+levelCompleteExit.addEventListener(
+    "click",
+    () => {
+        if (transitionBusy) {
+            return;
+        }
+
+        exitLevel();
+    }
+);
+
+canvas.addEventListener(
+    "click",
+    () => {
+        if (
+            state === "playing"
+        ) {
+            canvas.focus();
+        }
+    }
+);
+
+chooseSplashText();
+
+loadLevelsData().then(() => {
+    showMenu();
+    requestAnimationFrame(update);
+});
+
+})();
+</script>
+
+</body>
+</html>
