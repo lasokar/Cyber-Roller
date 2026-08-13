@@ -4,19 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cyber Roller</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 
 <style>
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html,
-body {
+html, body {
     margin: 0;
     width: 100%;
     height: 100%;
@@ -32,12 +28,7 @@ body {
     user-select: none;
 }
 
-button,
-input,
-textarea,
-select {
-    font-family: "Roboto", sans-serif;
-}
+button, input, textarea, select { font-family: "Roboto", sans-serif; }
 
 #wrap {
     position: relative;
@@ -87,21 +78,22 @@ select {
     background: #000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.8s ease;
+    transition: opacity 0.35s ease;
 }
 
 #popup-backdrop.visible {
     opacity: 0.75;
 }
 
-#level-complete-popup {
+#level-complete-popup,
+#solver-result-popup {
     position: fixed;
     left: 50%;
     top: 50%;
     z-index: 900;
     width: min(520px, 88vw);
     min-height: 390px;
-    padding: 72px 42px 58px;
+    padding: 62px 42px 52px;
     background: #06468c;
     border: 4px solid #00f2ff;
     border-radius: 24px;
@@ -111,51 +103,96 @@ select {
     transform: translate(-50%, -50%) translateY(-120vh) scale(0.9);
     pointer-events: none;
     transition:
-        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.35s ease;
+        transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.3s ease;
 }
 
-#level-complete-popup.visible {
+#level-complete-popup.visible,
+#solver-result-popup.visible {
     opacity: 1;
     transform: translate(-50%, -50%) translateY(0) scale(1);
     pointer-events: auto;
 }
 
-#level-complete-title {
-    margin: 0 0 52px;
+#level-complete-title,
+#solver-result-title {
+    margin: 0 0 35px;
     font-family: "Press Start 2P", monospace;
-    font-size: clamp(24px, 5vw, 42px);
+    font-size: clamp(22px, 4.5vw, 36px);
     line-height: 1.35;
     font-weight: 400;
-    letter-spacing: 0;
     color: #fff;
-    text-shadow: none;
 }
 
-#level-complete-exit {
-    min-width: 180px;
-    padding: 13px 30px;
+#solver-sequence {
+    width: 100%;
+    max-height: 190px;
+    overflow-y: auto;
+    margin: 0 auto 28px;
+    padding: 18px 14px;
+    background: #031e3d;
+    border: 2px solid #00f2ff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.solution-arrow {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    flex: 0 0 auto;
+    display: block;
+    transform-origin: center;
+}
+
+.solution-arrow.right { transform: rotate(90deg); }
+.solution-arrow.down { transform: rotate(180deg); }
+.solution-arrow.left { transform: rotate(-90deg); }
+
+.popup-button-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+#solver-move-count {
+    margin: 0 auto 18px;
+    color: #fff;
+    font-family: "Press Start 2P", monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    text-shadow: 2px 2px 0 #000;
+}
+
+.popup-btn {
+    min-width: 155px;
+    padding: 12px 22px;
     background: #0877d8;
     color: #fff;
     border: 3px solid #00f2ff;
     border-radius: 12px;
-    font-size: 21px;
+    font-size: 18px;
     font-weight: 900;
     cursor: pointer;
     outline: none;
-    box-shadow: none;
-    transition:
-        transform 0.1s ease,
-        background 0.1s ease;
+    transition: transform 0.1s ease, background 0.1s ease;
 }
 
-#level-complete-exit:hover {
-    background: #0b8bed;
+.popup-btn:hover { background: #0b8bed; }
+.popup-btn:active { transform: translate(2px, 2px); }
+
+.popup-btn.secondary {
+    background: #333;
+    border-color: #fff;
 }
 
-#level-complete-exit:active {
-    transform: translate(2px, 2px);
-}
+.popup-btn.secondary:hover { background: #444; }
 
 #menu-container {
     position: fixed;
@@ -181,25 +218,10 @@ select {
 }
 
 @keyframes logoDropIn {
-    0% {
-        transform: translateY(-140vh) scale(0.9);
-        opacity: 0;
-    }
-
-    60% {
-        transform: translateY(18px) scale(1.015);
-        opacity: 1;
-    }
-
-    78% {
-        transform: translateY(-7px) scale(1);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-    }
+    0% { transform: translateY(-140vh) scale(0.9); opacity: 0; }
+    60% { transform: translateY(18px) scale(1.015); opacity: 1; }
+    78% { transform: translateY(-7px) scale(1); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 
 #menu-logo {
@@ -221,36 +243,18 @@ select {
     font-size: clamp(15px, 2.1vw, 24px);
     font-weight: 900;
     white-space: nowrap;
-    text-shadow:
-        2px 2px 0 #3a3a00,
-        3px 3px 0 rgba(0, 0, 0, 0.65);
+    text-shadow: 2px 2px 0 #3a3a00, 3px 3px 0 rgba(0, 0, 0, 0.65);
     transform: rotate(-8deg) scale(0.82);
     opacity: 0;
     transform-origin: center;
-    animation:
-        splashFadeIn
-        0.55s
-        cubic-bezier(0.22, 1, 0.36, 1)
-        1.05s
-        forwards;
+    animation: splashFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) 1.05s forwards;
     pointer-events: none;
 }
 
 @keyframes splashFadeIn {
-    0% {
-        opacity: 0;
-        transform: rotate(-8deg) scale(0.82);
-    }
-
-    65% {
-        opacity: 1;
-        transform: rotate(-8deg) scale(1.08);
-    }
-
-    100% {
-        opacity: 1;
-        transform: rotate(-8deg) scale(1);
-    }
+    0% { opacity: 0; transform: rotate(-8deg) scale(0.82); }
+    65% { opacity: 1; transform: rotate(-8deg) scale(1.08); }
+    100% { opacity: 1; transform: rotate(-8deg) scale(1); }
 }
 
 #level-cards-container {
@@ -266,40 +270,25 @@ select {
     scrollbar-color: #fff #222;
 }
 
-#level-cards-container::-webkit-scrollbar {
-    width: 8px;
-}
-
-#level-cards-container::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-#level-cards-container::-webkit-scrollbar-thumb {
-    background: #fff;
-}
+#level-cards-container::-webkit-scrollbar { width: 8px; }
+#level-cards-container::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.08); }
+#level-cards-container::-webkit-scrollbar-thumb { background: #fff; }
 
 .level-card {
     min-height: 96px;
     background: rgba(15, 15, 15, 0.86);
     border: 2px solid rgba(255, 255, 255, 0.92);
-    box-shadow:
-        4px 4px 0 #000,
-        0 0 18px rgba(255, 255, 255, 0.025);
+    box-shadow: 4px 4px 0 #000, 0 0 18px rgba(255, 255, 255, 0.025);
     display: flex;
     align-items: center;
     padding: 12px 16px;
     gap: 20px;
-    transition:
-        transform 0.14s ease,
-        box-shadow 0.14s ease,
-        background 0.14s ease;
+    transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
 }
 
 .level-card:hover {
     background: rgba(34, 34, 34, 0.92);
-    box-shadow:
-        6px 6px 0 #000,
-        0 0 22px rgba(255, 255, 255, 0.07);
+    box-shadow: 6px 6px 0 #000, 0 0 22px rgba(255, 255, 255, 0.07);
 }
 
 .level-preview {
@@ -308,10 +297,8 @@ select {
     flex-shrink: 0;
     background: #69a84f;
     outline: 3px solid #000;
-    outline-offset: 0;
     image-rendering: pixelated;
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .level-card-info {
@@ -333,25 +320,25 @@ select {
     flex-shrink: 0;
 }
 
-.menu-btn {
+.menu-btn,
+.level-card-btn {
     background: #333;
     color: #fff;
     border: 2px solid #fff;
-    padding: 12px 24px;
-    font-size: 18px;
     font-weight: 700;
     cursor: pointer;
     outline: none;
-    box-shadow: 4px 4px 0 #000;
-    transition:
-        transform 0.1s ease,
-        box-shadow 0.1s ease,
-        background 0.1s ease;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
 }
 
-.menu-btn:hover {
-    background: #444;
+.menu-btn {
+    padding: 12px 24px;
+    font-size: 18px;
+    box-shadow: 4px 4px 0 #000;
 }
+
+.menu-btn:hover,
+.level-card-btn:hover { background: #444; }
 
 .menu-btn:active {
     box-shadow: none;
@@ -359,23 +346,9 @@ select {
 }
 
 .level-card-btn {
-    background: #333;
-    color: #fff;
-    border: 2px solid #fff;
     padding: 10px 18px;
     font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    outline: none;
     box-shadow: 3px 3px 0 #000;
-    transition:
-        transform 0.1s ease,
-        box-shadow 0.1s ease,
-        background 0.1s ease;
-}
-
-.level-card-btn:hover {
-    background: #444;
 }
 
 .level-card-btn:active {
@@ -388,9 +361,7 @@ select {
     color: #ff2020 !important;
 }
 
-.remove-card-btn:hover {
-    background: #441010 !important;
-}
+.remove-card-btn:hover { background: #441010 !important; }
 
 .menu-actions {
     display: flex;
@@ -412,10 +383,7 @@ select {
     box-shadow: none;
 }
 
-#back-btn {
-    top: 0;
-}
-
+#back-btn { top: 0; }
 #back-btn img {
     width: 150px;
     height: 150px;
@@ -423,16 +391,34 @@ select {
     object-fit: contain;
 }
 
-#restart-btn {
-    top: 150px;
-}
-
+#restart-btn { top: 150px; }
 #restart-btn img {
     width: 100px;
     height: 100px;
     display: block;
     object-fit: contain;
 }
+
+#solve-btn {
+    top: 250px;
+    width: 100px;
+    height: 100px;
+}
+
+#solve-btn img {
+    width: 100px;
+    height: 100px;
+    display: block;
+    object-fit: contain;
+}
+
+#solve-btn:disabled,
+#solve-btn.solving {
+    opacity: 0.45;
+    filter: brightness(0.55);
+    cursor: default;
+}
+
 
 @media (max-width: 700px) {
     #menu-container {
@@ -467,13 +453,8 @@ select {
         height: 60px;
     }
 
-    .level-card-info {
-        font-size: 17px;
-    }
-
-    .level-card-actions {
-        gap: 6px;
-    }
+    .level-card-info { font-size: 17px; }
+    .level-card-actions { gap: 6px; }
 
     .level-card-btn {
         padding: 9px 12px;
@@ -485,25 +466,47 @@ select {
         height: 115px;
     }
 
-    #restart-btn {
-        top: 115px;
-    }
+    #restart-btn { top: 115px; }
 
     #restart-btn img {
         width: 80px;
         height: 80px;
     }
 
-    #level-complete-popup {
+    #solve-btn { top: 205px; width: 80px; height: 80px; }
+    #solve-btn img { width: 80px; height: 80px; }
+
+    #solve-btn img {
+        width: 80px;
+        height: 80px;
+    }
+
+    #level-complete-popup,
+    #solver-result-popup {
         width: 88vw;
         min-height: 330px;
-        padding: 55px 22px 45px;
+        padding: 45px 22px 40px;
         border-radius: 20px;
     }
 
-    #level-complete-title {
+    #level-complete-title,
+    #solver-result-title {
         font-size: 24px;
-        margin-bottom: 42px;
+        margin-bottom: 30px;
+    }
+
+    #solver-preview {
+        max-height: 220px;
+    }
+
+    .popup-btn {
+        min-width: 135px;
+        font-size: 16px;
+    }
+
+    #solver-move-count {
+        font-size: 11px;
+        margin-bottom: 15px;
     }
 }
 </style>
@@ -534,6 +537,10 @@ select {
     <img src="assets/restart.png" alt="Restart">
 </button>
 
+<button id="solve-btn" class="nav-btn" style="display:none" title="Solve Level">
+    <img src="assets/solver.png" alt="Solve">
+</button>
+
 <div id="wrap" style="display:none">
     <canvas id="game" tabindex="0"></canvas>
 </div>
@@ -542,8 +549,19 @@ select {
 
 <div id="level-complete-popup" aria-hidden="true">
     <h1 id="level-complete-title">Level Complete</h1>
-    <button id="level-complete-exit" type="button">Exit</button>
+    <button id="level-complete-exit" class="popup-btn" type="button">Exit</button>
 </div>
+
+<div id="solver-result-popup" aria-hidden="true">
+    <h1 id="solver-result-title">Solution</h1>
+    <div id="solver-sequence"></div>
+    <div id="solver-move-count">Number of moves: 0</div>
+    <div class="popup-button-row">
+        <button id="solver-play-btn" class="popup-btn" type="button">Play Macro</button>
+        <button id="solver-close-btn" class="popup-btn secondary" type="button">Close</button>
+    </div>
+</div>
+
 
 <div id="fade-overlay"></div>
 
@@ -563,10 +581,17 @@ const menuLogo = document.getElementById("menu-logo");
 const splashText = document.getElementById("splash-text");
 const backBtn = document.getElementById("back-btn");
 const restartBtn = document.getElementById("restart-btn");
+const solveBtn = document.getElementById("solve-btn");
 const fadeOverlay = document.getElementById("fade-overlay");
 const popupBackdrop = document.getElementById("popup-backdrop");
 const levelCompletePopup = document.getElementById("level-complete-popup");
 const levelCompleteExit = document.getElementById("level-complete-exit");
+const solverResultPopup = document.getElementById("solver-result-popup");
+const solverResultTitle = document.getElementById("solver-result-title");
+const solverSequence = document.getElementById("solver-sequence");
+const solverPlayBtn = document.getElementById("solver-play-btn");
+const solverCloseBtn = document.getElementById("solver-close-btn");
+const solverMoveCount = document.getElementById("solver-move-count");
 
 const splashTexts = [
     "Now in Javascript!",
@@ -580,20 +605,45 @@ const splashTexts = [
     "porting this everywhere atp"
 ];
 
+const directions = {
+    ArrowUp: { dr: -1, dc: 0 },
+    ArrowDown: { dr: 1, dc: 0 },
+    ArrowLeft: { dr: 0, dc: -1 },
+    ArrowRight: { dr: 0, dc: 1 }
+};
+
+const keyToDir = {
+    ArrowUp: directions.ArrowUp,
+    ArrowDown: directions.ArrowDown,
+    ArrowLeft: directions.ArrowLeft,
+    ArrowRight: directions.ArrowRight,
+    KeyW: directions.ArrowUp,
+    KeyS: directions.ArrowDown,
+    KeyA: directions.ArrowLeft,
+    KeyD: directions.ArrowRight,
+    w: directions.ArrowUp,
+    W: directions.ArrowUp,
+    s: directions.ArrowDown,
+    S: directions.ArrowDown,
+    a: directions.ArrowLeft,
+    A: directions.ArrowLeft,
+    d: directions.ArrowRight,
+    D: directions.ArrowRight
+};
+
 function chooseSplashText() {
-    splashText.textContent = splashTexts[
-        Math.floor(Math.random() * splashTexts.length)
-    ];
+    splashText.textContent = splashTexts[Math.floor(Math.random() * splashTexts.length)];
 }
 
 let transitionBusy = false;
+let solverBusy = false;
+let macroPlaying = false;
+let solutionMacro = [];
 
 function setFade(active, duration = 500) {
     fadeOverlay.style.transition = `opacity ${duration}ms ease`;
-
-    if (active) {
-        fadeOverlay.classList.add("active");
-    } else {
+    if (active) fadeOverlay.classList.add("active");
+    else {
         void fadeOverlay.offsetWidth;
         fadeOverlay.classList.remove("active");
     }
@@ -620,9 +670,21 @@ function showLevelCompletePopup() {
 }
 
 function hideLevelCompletePopup() {
-    popupBackdrop.classList.remove("visible");
     levelCompletePopup.classList.remove("visible");
     levelCompletePopup.setAttribute("aria-hidden", "true");
+    if (!solverResultPopup.classList.contains("visible")) popupBackdrop.classList.remove("visible");
+}
+
+function showSolverResultPopup() {
+    popupBackdrop.classList.add("visible");
+    solverResultPopup.classList.add("visible");
+    solverResultPopup.setAttribute("aria-hidden", "false");
+}
+
+function hideSolverResultPopup() {
+    solverResultPopup.classList.remove("visible");
+    solverResultPopup.setAttribute("aria-hidden", "true");
+    if (!levelCompletePopup.classList.contains("visible")) popupBackdrop.classList.remove("visible");
 }
 
 const menuGrid = {
@@ -637,12 +699,10 @@ const menuGrid = {
 
 function resizeMenuBg() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
     menuBgCanvas.width = Math.floor(window.innerWidth * dpr);
     menuBgCanvas.height = Math.floor(window.innerHeight * dpr);
     menuBgCanvas.style.width = `${window.innerWidth}px`;
     menuBgCanvas.style.height = `${window.innerHeight}px`;
-
     menuBgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
@@ -663,10 +723,8 @@ function drawMenuBackground(now) {
     delta = Math.min(delta, 0.05);
 
     if (state === "menu") {
-        menuGrid.offsetX += menuGrid.speedX * delta;
-        menuGrid.offsetY += menuGrid.speedY * delta;
-        menuGrid.offsetX %= menuGrid.gridSize;
-        menuGrid.offsetY %= menuGrid.gridSize;
+        menuGrid.offsetX = (menuGrid.offsetX + menuGrid.speedX * delta) % menuGrid.gridSize;
+        menuGrid.offsetY = (menuGrid.offsetY + menuGrid.speedY * delta) % menuGrid.gridSize;
 
         menuBgCtx.fillStyle = "#000";
         menuBgCtx.fillRect(0, 0, width, height);
@@ -679,31 +737,19 @@ function drawMenuBackground(now) {
         const translateY = -height * 0.85;
 
         menuBgCtx.save();
-        menuBgCtx.setTransform(
-            1,
-            shearY,
-            shearX,
-            1,
-            translateX,
-            translateY
-        );
+        menuBgCtx.setTransform(1, shearY, shearX, 1, translateX, translateY);
 
         const gridSize = menuGrid.gridSize;
         const startX = -gridSize + menuGrid.offsetX;
         const startY = -gridSize + menuGrid.offsetY;
-
-        const verticalCount =
-            Math.ceil((planeWidth + width) / gridSize) + 10;
-
-        const horizontalCount =
-            Math.ceil((planeHeight + height) / gridSize) + 10;
+        const verticalCount = Math.ceil((planeWidth + width) / gridSize) + 10;
+        const horizontalCount = Math.ceil((planeHeight + height) / gridSize) + 10;
 
         menuBgCtx.lineWidth = 1.25;
         menuBgCtx.strokeStyle = "rgba(255,255,255,0.14)";
 
         for (let i = 0; i < verticalCount; i++) {
             const x = startX + i * gridSize;
-
             menuBgCtx.beginPath();
             menuBgCtx.moveTo(x, startY);
             menuBgCtx.lineTo(x, startY + planeHeight);
@@ -712,7 +758,6 @@ function drawMenuBackground(now) {
 
         for (let i = 0; i < horizontalCount; i++) {
             const y = startY + i * gridSize;
-
             menuBgCtx.beginPath();
             menuBgCtx.moveTo(startX, y);
             menuBgCtx.lineTo(startX + planeWidth, y);
@@ -733,7 +778,6 @@ function drawMenuBackground(now) {
         vignette.addColorStop(0, "rgba(0,0,0,0.02)");
         vignette.addColorStop(0.55, "rgba(0,0,0,0.08)");
         vignette.addColorStop(1, "rgba(0,0,0,0.42)");
-
         menuBgCtx.fillStyle = vignette;
         menuBgCtx.fillRect(0, 0, width, height);
     } else {
@@ -756,7 +800,6 @@ const coinSound = new Audio("sound/coin.mp3");
 
 menuMusic.loop = true;
 backgroundMusic.loop = true;
-
 menuMusic.volume = 0.5;
 backgroundMusic.volume = 1;
 startSound.volume = 1;
@@ -844,32 +887,6 @@ let goal = { r: 0, c: 0 };
 let start = { r: 0, c: 0 };
 let coinsCollected = 0;
 
-const directions = {
-    ArrowUp: { dr: -1, dc: 0 },
-    ArrowDown: { dr: 1, dc: 0 },
-    ArrowLeft: { dr: 0, dc: -1 },
-    ArrowRight: { dr: 0, dc: 1 }
-};
-
-const keyToDir = {
-    ArrowUp: directions.ArrowUp,
-    ArrowDown: directions.ArrowDown,
-    ArrowLeft: directions.ArrowLeft,
-    ArrowRight: directions.ArrowRight,
-    KeyW: directions.ArrowUp,
-    KeyS: directions.ArrowDown,
-    KeyA: directions.ArrowLeft,
-    KeyD: directions.ArrowRight,
-    w: directions.ArrowUp,
-    W: directions.ArrowUp,
-    s: directions.ArrowDown,
-    S: directions.ArrowDown,
-    a: directions.ArrowLeft,
-    A: directions.ArrowLeft,
-    d: directions.ArrowRight,
-    D: directions.ArrowRight
-};
-
 let ball = { r: 0, c: 0 };
 let direction = directions.ArrowRight;
 let moving = false;
@@ -882,14 +899,11 @@ let fromC = 0;
 let toR = 0;
 let toC = 0;
 let moveStart = 0;
-
 let fadeStart = 0;
 let pendingState = null;
-
 let deathFadeStart = 0;
 let deathWaitStart = 0;
 let deathBlackStart = 0;
-
 let currentLevelCode = "";
 
 let pushingBlock = false;
@@ -900,12 +914,10 @@ let pushBallFromR = 0;
 let pushBallFromC = 0;
 let pushBallToR = 0;
 let pushBallToC = 0;
-
 let pushBlockFromR = 0;
 let pushBlockFromC = 0;
 let pushBlockToR = 0;
 let pushBlockToC = 0;
-
 let pushMoveStart = 0;
 
 let rampTurning = false;
@@ -924,19 +936,12 @@ let currentLevelIndex = 0;
 async function loadLevelsData() {
     try {
         const res = await fetch("assets/all_levels.json");
-
         if (res.ok) {
             const data = await res.json();
             levels = Array.isArray(data) ? data : [];
-        } else {
-            levels = [];
-        }
+        } else levels = [];
     } catch (err) {
-        console.warn(
-            "Could not fetch assets/all_levels.json. Check CORS or file paths.",
-            err
-        );
-
+        console.warn("Could not fetch assets/all_levels.json.", err);
         levels = [];
     }
 
@@ -947,20 +952,15 @@ async function loadLevelsData() {
 
 function refreshLevelList() {
     levels = levels.slice(0, builtInCount);
-
     let customLevels = [];
 
     try {
-        customLevels = JSON.parse(
-            localStorage.getItem("cyberRollerCustom") || "[]"
-        );
+        customLevels = JSON.parse(localStorage.getItem("cyberRollerCustom") || "[]");
     } catch {
         customLevels = [];
     }
 
-    if (!Array.isArray(customLevels)) {
-        customLevels = [];
-    }
+    if (!Array.isArray(customLevels)) customLevels = [];
 
     customLevels.forEach((code, index) => {
         levels.push({
@@ -972,72 +972,36 @@ function refreshLevelList() {
 }
 
 function isValidLevelCode(codeStr) {
-    if (!codeStr || typeof codeStr !== "string") {
-        return false;
-    }
+    if (!codeStr || typeof codeStr !== "string") return false;
 
     const rawParts = codeStr.trim().split(/\s+/);
-
-    if (rawParts.length < 3) {
-        return false;
-    }
+    if (rawParts.length < 3) return false;
 
     const parts = rawParts.map(Number);
     const h = parts.pop();
     const w = parts.pop();
 
-    if (
-        !Number.isFinite(h) ||
-        !Number.isFinite(w) ||
-        h <= 0 ||
-        w <= 0
-    ) {
-        return false;
-    }
-
-    if (parts.length !== h * w) {
-        return false;
-    }
+    if (!Number.isFinite(h) || !Number.isFinite(w) || h <= 0 || w <= 0) return false;
+    if (parts.length !== h * w) return false;
 
     let hasStart = false;
     let hasGoal = false;
 
-    for (let i = 0; i < parts.length; i++) {
-        if (!Number.isFinite(parts[i])) {
-            return false;
-        }
-
-        if (parts[i] === 15) {
-            hasStart = true;
-        }
-
-        if (parts[i] === 3) {
-            hasGoal = true;
-        }
+    for (const id of parts) {
+        if (!Number.isFinite(id)) return false;
+        if (id === 15) hasStart = true;
+        if (id === 3) hasGoal = true;
     }
 
     return hasStart && hasGoal;
 }
 
-function drawMiniPreviewCell(
-    pCtx,
-    x,
-    y,
-    width,
-    height,
-    color
-) {
+function drawMiniPreviewCell(pCtx, x, y, width, height, color) {
     pCtx.fillStyle = color;
     pCtx.fillRect(x, y, width, height);
     pCtx.strokeStyle = "#000";
     pCtx.lineWidth = 0.1;
-
-    pCtx.strokeRect(
-        x + 0.05,
-        y + 0.05,
-        Math.max(0, width - 0.25),
-        Math.max(0, height - 0.25)
-    );
+    pCtx.strokeRect(x + 0.05, y + 0.05, Math.max(0, width - 0.25), Math.max(0, height - 0.25));
 }
 
 function drawMiniPreview(previewCanvas, codeStr) {
@@ -1047,32 +1011,19 @@ function drawMiniPreview(previewCanvas, codeStr) {
 
     pCtx.imageSmoothingEnabled = false;
     pCtx.clearRect(0, 0, width, height);
-
     pCtx.fillStyle = COLORS.floor;
     pCtx.fillRect(0, 0, width, height);
 
-    if (!codeStr || typeof codeStr !== "string") {
-        return;
-    }
+    if (!codeStr || typeof codeStr !== "string") return;
 
     const rawParts = codeStr.trim().split(/\s+/);
-
-    if (rawParts.length < 2) {
-        return;
-    }
+    if (rawParts.length < 2) return;
 
     const parts = rawParts.map(Number);
     const h = parts.pop();
     const w = parts.pop();
 
-    if (
-        !Number.isFinite(h) ||
-        !Number.isFinite(w) ||
-        h <= 0 ||
-        w <= 0
-    ) {
-        return;
-    }
+    if (!Number.isFinite(h) || !Number.isFinite(w) || h <= 0 || w <= 0) return;
 
     const cellW = width / w;
     const cellH = height / h;
@@ -1080,16 +1031,12 @@ function drawMiniPreview(previewCanvas, codeStr) {
     for (let i = 0; i < parts.length; i++) {
         const r = Math.floor(i / w);
         const c = i % w;
-
-        if (r >= h || c >= w) {
-            continue;
-        }
+        if (r >= h || c >= w) continue;
 
         const id = parts[i];
         let color = COLORS.floor;
 
-        if (id === 0) color = COLORS.floor;
-        else if (id === 2) color = COLORS.wall;
+        if (id === 2) color = COLORS.wall;
         else if (id === 3) color = COLORS.goal;
         else if (id === 4) color = "#f6b265";
         else if (id >= 5 && id <= 9) color = "#9c9e9c";
@@ -1103,14 +1050,7 @@ function drawMiniPreview(previewCanvas, codeStr) {
         else if (id === 21) color = COLORS.teleportRed;
         else if (id === 15) color = COLORS.ball;
 
-        drawMiniPreviewCell(
-            pCtx,
-            c * cellW,
-            r * cellH,
-            cellW,
-            cellH,
-            color
-        );
+        drawMiniPreviewCell(pCtx, c * cellW, r * cellH, cellW, cellH, color);
     }
 }
 
@@ -1120,9 +1060,7 @@ function renderLevelCards() {
     if (levels.length === 0) {
         const empty = document.createElement("div");
         empty.className = "level-card";
-        empty.innerHTML =
-            `<div class="level-card-info">No levels found.</div>`;
-
+        empty.innerHTML = `<div class="level-card-info">No levels found.</div>`;
         levelCardsContainer.appendChild(empty);
         return;
     }
@@ -1148,75 +1086,38 @@ function renderLevelCards() {
         playCardBtn.textContent = "Play";
 
         playCardBtn.addEventListener("click", () => {
-            if (transitionBusy) {
-                return;
-            }
+            if (transitionBusy) return;
 
             currentLevelIndex = index;
-
-            if (
-                lvl &&
-                typeof lvl.data === "string" &&
-                lvl.data.trim()
-            ) {
-                enterLevel(lvl.data);
-            }
+            if (lvl && typeof lvl.data === "string" && lvl.data.trim()) enterLevel(lvl.data);
         });
 
         actions.appendChild(playCardBtn);
 
         if (lvl.isCustom) {
             const deleteBtn = document.createElement("button");
-            deleteBtn.className =
-                "level-card-btn remove-card-btn";
+            deleteBtn.className = "level-card-btn remove-card-btn";
             deleteBtn.textContent = "Delete";
 
             deleteBtn.addEventListener("click", () => {
-                if (transitionBusy) {
-                    return;
-                }
-
+                if (transitionBusy) return;
                 currentLevelIndex = index;
 
-                if (
-                    !confirm(
-                        "Are you sure you want to delete this level? This can't be undone!"
-                    )
-                ) {
-                    return;
-                }
+                if (!confirm("Are you sure you want to delete this level? This can't be undone!")) return;
 
                 let customLevels = [];
-
                 try {
-                    customLevels = JSON.parse(
-                        localStorage.getItem(
-                            "cyberRollerCustom"
-                        ) || "[]"
-                    );
+                    customLevels = JSON.parse(localStorage.getItem("cyberRollerCustom") || "[]");
                 } catch {
                     customLevels = [];
                 }
 
-                if (!Array.isArray(customLevels)) {
-                    customLevels = [];
-                }
+                if (!Array.isArray(customLevels)) customLevels = [];
 
-                const customIndex =
-                    currentLevelIndex - builtInCount;
+                const customIndex = currentLevelIndex - builtInCount;
+                if (customIndex >= 0 && customIndex < customLevels.length) customLevels.splice(customIndex, 1);
 
-                if (
-                    customIndex >= 0 &&
-                    customIndex < customLevels.length
-                ) {
-                    customLevels.splice(customIndex, 1);
-                }
-
-                localStorage.setItem(
-                    "cyberRollerCustom",
-                    JSON.stringify(customLevels)
-                );
-
+                localStorage.setItem("cyberRollerCustom", JSON.stringify(customLevels));
                 refreshLevelList();
                 renderLevelCards();
             });
@@ -1228,37 +1129,29 @@ function renderLevelCards() {
         card.appendChild(info);
         card.appendChild(actions);
 
-        if (typeof lvl.data === "string") {
-            drawMiniPreview(
-                previewCanvas,
-                lvl.data
-            );
-        }
-
+        if (typeof lvl.data === "string") drawMiniPreview(previewCanvas, lvl.data);
         levelCardsContainer.appendChild(card);
     });
 }
 
 function restartLogoAnimation() {
     chooseSplashText();
-
     menuLogo.style.animation = "none";
     splashText.style.animation = "none";
-
     void menuLogo.offsetWidth;
     void splashText.offsetWidth;
-
-    menuLogo.style.animation =
-        "logoDropIn 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards";
-
-    splashText.style.animation =
-        "splashFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.95s forwards";
+    menuLogo.style.animation = "logoDropIn 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards";
+    splashText.style.animation = "splashFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.95s forwards";
 }
 
 function showMenu() {
     state = "menu";
+    solverBusy = false;
+    macroPlaying = false;
+    solutionMacro = [];
 
     hideLevelCompletePopup();
+    hideSolverResultPopup();
     stopBackgroundMusic();
     playMenuMusic();
 
@@ -1266,6 +1159,7 @@ function showMenu() {
     menuContainer.style.display = "flex";
     backBtn.style.display = "none";
     restartBtn.style.display = "none";
+    solveBtn.style.display = "none";
     wrap.style.display = "none";
 
     restartLogoAnimation();
@@ -1274,20 +1168,20 @@ function showMenu() {
 
 function showGame(codeStr) {
     hideLevelCompletePopup();
+    hideSolverResultPopup();
 
     menuBgCanvas.style.display = "none";
     menuContainer.style.display = "none";
     backBtn.style.display = "block";
     restartBtn.style.display = "block";
+    solveBtn.style.display = "block";
     wrap.style.display = "grid";
 
     loadLevel(codeStr);
 }
 
 async function enterLevel(codeStr) {
-    if (transitionBusy) {
-        return;
-    }
+    if (transitionBusy) return;
 
     transitionBusy = true;
     playStartSound();
@@ -1300,12 +1194,11 @@ async function enterLevel(codeStr) {
 }
 
 async function exitLevel() {
-    if (transitionBusy) {
-        return;
-    }
+    if (transitionBusy || solverBusy || macroPlaying) return;
 
     transitionBusy = true;
     hideLevelCompletePopup();
+    hideSolverResultPopup();
     playStartSound();
 
     await fadeToBlack(500);
@@ -1316,17 +1209,12 @@ async function exitLevel() {
 }
 
 importBtn.addEventListener("click", () => {
-    if (transitionBusy) {
-        return;
-    }
+    if (transitionBusy) return;
 
     playMenuMusic();
 
     const code = prompt("Paste level code here:");
-
-    if (!code || !code.trim()) {
-        return;
-    }
+    if (!code || !code.trim()) return;
 
     const trimmed = code.trim();
 
@@ -1336,57 +1224,31 @@ importBtn.addEventListener("click", () => {
             "The code must contain a valid grid, width, height, " +
             "a start tile and a goal tile."
         );
-
         return;
     }
 
     let customLevels = [];
-
     try {
-        customLevels = JSON.parse(
-            localStorage.getItem(
-                "cyberRollerCustom"
-            ) || "[]"
-        );
+        customLevels = JSON.parse(localStorage.getItem("cyberRollerCustom") || "[]");
     } catch {
         customLevels = [];
     }
 
-    if (!Array.isArray(customLevels)) {
-        customLevels = [];
-    }
+    if (!Array.isArray(customLevels)) customLevels = [];
 
     customLevels.push(trimmed);
-
-    localStorage.setItem(
-        "cyberRollerCustom",
-        JSON.stringify(customLevels)
-    );
+    localStorage.setItem("cyberRollerCustom", JSON.stringify(customLevels));
 
     refreshLevelList();
     renderLevelCards();
 
-    const newCard =
-        levelCardsContainer.lastElementChild;
-
-    if (newCard) {
-        newCard.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest"
-        });
-    }
+    const newCard = levelCardsContainer.lastElementChild;
+    if (newCard) newCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
 
 function parseLevel(codeStr) {
-    const parts =
-        codeStr
-            .trim()
-            .split(/\s+/)
-            .map(Number);
-
-    if (parts.length < 2) {
-        return;
-    }
+    const parts = codeStr.trim().split(/\s+/).map(Number);
+    if (parts.length < 2) return;
 
     const h = parts.pop();
     const w = parts.pop();
@@ -1418,55 +1280,36 @@ function parseLevel(codeStr) {
         const id = parts[i];
         const key = `${r},${c}`;
 
-        if (id === 2) {
-            walls.add(key);
-        } else if (id === 3) {
-            goal.r = r;
-            goal.c = c;
-        } else if (id === 4) {
-            coins.add(key);
-        } else if (id >= 5 && id <= 9) {
-            coinBlocks.set(key, id - 4);
-        } else if (id === 10) {
+        if (id === 2) walls.add(key);
+        else if (id === 3) goal = { r, c };
+        else if (id === 4) coins.add(key);
+        else if (id >= 5 && id <= 9) coinBlocks.set(key, id - 4);
+        else if (id === 10) {
             teleporterMap.set(key, 10);
             orangeTps.push({ r, c, key });
         } else if (id === 11) {
             teleporterMap.set(key, 11);
             purpleTps.push({ r, c, key });
-        } else if (id === 12) {
-            voidBlocks.add(key);
-        } else if (id === 13) {
-            pushBlocks.add(key);
-        } else if (id === 14) {
-            pinkPushBlocks.add(key);
-        } else if (id >= 16 && id <= 19) {
-            ramps.set(key, id);
-        } else if (id === 20) {
+        } else if (id === 12) voidBlocks.add(key);
+        else if (id === 13) pushBlocks.add(key);
+        else if (id === 14) pinkPushBlocks.add(key);
+        else if (id >= 16 && id <= 19) ramps.set(key, id);
+        else if (id === 20) {
             teleporterMap.set(key, 20);
             limeTps.push({ r, c, key });
         } else if (id === 21) {
             teleporterMap.set(key, 21);
             redTps.push({ r, c, key });
         } else if (id === 15) {
-            start.r = r;
-            start.c = c;
+            start = { r, c };
         }
     }
 }
 
 function updateCanvasSize() {
-    canvas.width =
-        GRID_X * 2 +
-        COLS * PITCH -
-        GAP;
-
-    canvas.height =
-        GRID_Y * 2 +
-        ROWS * PITCH -
-        GAP;
-
-    wrap.style.aspectRatio =
-        `${canvas.width}/${canvas.height}`;
+    canvas.width = GRID_X * 2 + COLS * PITCH - GAP;
+    canvas.height = GRID_Y * 2 + ROWS * PITCH - GAP;
+    wrap.style.aspectRatio = `${canvas.width}/${canvas.height}`;
 }
 
 function loadLevel(codeStr) {
@@ -1477,60 +1320,33 @@ function loadLevel(codeStr) {
 }
 
 function isInside(r, c) {
-    return (
-        r >= 0 &&
-        r < ROWS &&
-        c >= 0 &&
-        c < COLS
-    );
+    return r >= 0 && r < ROWS && c >= 0 && c < COLS;
 }
 
 function isWall(r, c) {
     const key = `${r},${c}`;
 
-    if (walls.has(key)) {
-        return true;
-    }
-
-    if (
-        coinBlocks.has(key) &&
-        coinsCollected < coinBlocks.get(key)
-    ) {
-        return true;
-    }
+    if (walls.has(key)) return true;
+    if (coinBlocks.has(key) && coinsCollected < coinBlocks.get(key)) return true;
 
     return false;
 }
 
 function cellXY(r, c) {
-    return {
-        x: GRID_X + c * PITCH,
-        y: GRID_Y + r * PITCH
-    };
+    return { x: GRID_X + c * PITCH, y: GRID_Y + r * PITCH };
 }
 
 function centerXY(r, c) {
     const p = cellXY(r, c);
-
-    return {
-        x: p.x + CELL / 2,
-        y: p.y + CELL / 2
-    };
+    return { x: p.x + CELL / 2, y: p.y + CELL / 2 };
 }
 
 function drawCell(r, c, fill) {
     const { x, y } = cellXY(r, c);
-
     ctx.fillStyle = "#000";
     ctx.fillRect(x, y, CELL, CELL);
-
     ctx.fillStyle = fill;
-    ctx.fillRect(
-        x + 2,
-        y + 2,
-        CELL - 4,
-        CELL - 4
-    );
+    ctx.fillRect(x + 2, y + 2, CELL - 4, CELL - 4);
 }
 
 function drawPushBlock(r, c, color) {
@@ -1538,14 +1354,8 @@ function drawPushBlock(r, c, color) {
 
     ctx.fillStyle = "#000";
     ctx.fillRect(x, y, CELL, CELL);
-
     ctx.fillStyle = color;
-    ctx.fillRect(
-        x + 2,
-        y + 2,
-        CELL - 4,
-        CELL - 4
-    );
+    ctx.fillRect(x + 2, y + 2, CELL - 4, CELL - 4);
 
     ctx.fillStyle = "#fff";
     ctx.strokeStyle = "#fff";
@@ -1603,14 +1413,8 @@ function drawRamp(r, c, id) {
 
     ctx.fillStyle = "#000";
     ctx.fillRect(x, y, CELL, CELL);
-
     ctx.fillStyle = COLORS.floor;
-    ctx.fillRect(
-        x + 2,
-        y + 2,
-        CELL - 4,
-        CELL - 4
-    );
+    ctx.fillRect(x + 2, y + 2, CELL - 4, CELL - 4);
 
     ctx.fillStyle = "#b35f00";
     ctx.beginPath();
@@ -1640,73 +1444,25 @@ function drawRamp(r, c, id) {
     ctx.beginPath();
 
     if (id === 16) {
-        ctx.moveTo(
-            x + CELL - 2,
-            y + CELL * 0.25
-        );
-        ctx.lineTo(
-            x + CELL * 0.75,
-            y + CELL * 0.75
-        );
-        ctx.lineTo(
-            x + CELL * 0.25,
-            y + CELL - 2
-        );
-        ctx.lineTo(
-            x + CELL - 2,
-            y + CELL - 2
-        );
+        ctx.moveTo(x + CELL - 2, y + CELL * 0.25);
+        ctx.lineTo(x + CELL * 0.75, y + CELL * 0.75);
+        ctx.lineTo(x + CELL * 0.25, y + CELL - 2);
+        ctx.lineTo(x + CELL - 2, y + CELL - 2);
     } else if (id === 17) {
-        ctx.moveTo(
-            x + CELL * 0.75,
-            y + CELL - 2
-        );
-        ctx.lineTo(
-            x + CELL * 0.25,
-            y + CELL * 0.75
-        );
-        ctx.lineTo(
-            x + 2,
-            y + CELL * 0.25
-        );
-        ctx.lineTo(
-            x + 2,
-            y + CELL - 2
-        );
+        ctx.moveTo(x + CELL * 0.75, y + CELL - 2);
+        ctx.lineTo(x + CELL * 0.25, y + CELL * 0.75);
+        ctx.lineTo(x + 2, y + CELL * 0.25);
+        ctx.lineTo(x + 2, y + CELL - 2);
     } else if (id === 18) {
-        ctx.moveTo(
-            x + CELL * 0.25,
-            y + 2
-        );
-        ctx.lineTo(
-            x + CELL * 0.75,
-            y + CELL * 0.25
-        );
-        ctx.lineTo(
-            x + CELL - 2,
-            y + CELL * 0.75
-        );
-        ctx.lineTo(
-            x + CELL - 2,
-            y + 2
-        );
+        ctx.moveTo(x + CELL * 0.25, y + 2);
+        ctx.lineTo(x + CELL * 0.75, y + CELL * 0.25);
+        ctx.lineTo(x + CELL - 2, y + CELL * 0.75);
+        ctx.lineTo(x + CELL - 2, y + 2);
     } else {
-        ctx.moveTo(
-            x + 2,
-            y + CELL * 0.75
-        );
-        ctx.lineTo(
-            x + CELL * 0.25,
-            y + CELL * 0.25
-        );
-        ctx.lineTo(
-            x + CELL * 0.75,
-            y + 2
-        );
-        ctx.lineTo(
-            x + 2,
-            y + 2
-        );
+        ctx.moveTo(x + 2, y + CELL * 0.75);
+        ctx.lineTo(x + CELL * 0.25, y + CELL * 0.25);
+        ctx.lineTo(x + CELL * 0.75, y + 2);
+        ctx.lineTo(x + 2, y + 2);
     }
 
     ctx.closePath();
@@ -1717,57 +1473,27 @@ function drawRamp(r, c, id) {
     ctx.beginPath();
 
     if (id === 16 || id === 19) {
-        ctx.moveTo(
-            x + 2,
-            y + CELL - 2
-        );
-        ctx.lineTo(
-            x + CELL - 2,
-            y + 2
-        );
+        ctx.moveTo(x + 2, y + CELL - 2);
+        ctx.lineTo(x + CELL - 2, y + 2);
     } else {
-        ctx.moveTo(
-            x + 2,
-            y + 2
-        );
-        ctx.lineTo(
-            x + CELL - 2,
-            y + CELL - 2
-        );
+        ctx.moveTo(x + 2, y + 2);
+        ctx.lineTo(x + CELL - 2, y + CELL - 2);
     }
 
     ctx.stroke();
 }
 
 function teleporterColor(type) {
-    if (type === 10) {
-        return COLORS.teleportOrange;
-    }
-
-    if (type === 11) {
-        return COLORS.teleportPurple;
-    }
-
-    if (type === 20) {
-        return COLORS.teleportLime;
-    }
-
+    if (type === 10) return COLORS.teleportOrange;
+    if (type === 11) return COLORS.teleportPurple;
+    if (type === 20) return COLORS.teleportLime;
     return COLORS.teleportRed;
 }
 
 function teleporterList(type) {
-    if (type === 10) {
-        return orangeTps;
-    }
-
-    if (type === 11) {
-        return purpleTps;
-    }
-
-    if (type === 20) {
-        return limeTps;
-    }
-
+    if (type === 10) return orangeTps;
+    if (type === 11) return purpleTps;
+    if (type === 20) return limeTps;
     return redTps;
 }
 
@@ -1776,26 +1502,13 @@ function drawTeleporter(r, c, color) {
 
     ctx.fillStyle = "#000";
     ctx.fillRect(x, y, CELL, CELL);
-
     ctx.fillStyle = color;
-    ctx.fillRect(
-        x + 2,
-        y + 2,
-        CELL - 4,
-        CELL - 4
-    );
-
+    ctx.fillRect(x + 2, y + 2, CELL - 4, CELL - 4);
     ctx.fillStyle = "#fff";
 
     const s = CELL * 0.5;
     const o = (CELL - s) / 2;
-
-    ctx.fillRect(
-        x + o,
-        y + o,
-        s,
-        s
-    );
+    ctx.fillRect(x + o, y + o, s, s);
 }
 
 function drawCoinBlock(r, c, n) {
@@ -1804,37 +1517,19 @@ function drawCoinBlock(r, c, n) {
 
     ctx.fillStyle = "#4a524a";
     ctx.fillRect(x, y, CELL, CELL);
-
     ctx.fillStyle = "#9c9e9c";
-    ctx.fillRect(
-        x + b,
-        y + b,
-        CELL - b * 2,
-        CELL - b * 2
-    );
+    ctx.fillRect(x + b, y + b, CELL - b * 2, CELL - b * 2);
 
     const cx = x + CELL / 2;
     const cy = y + CELL / 2;
 
     ctx.beginPath();
-    ctx.arc(
-        cx,
-        cy,
-        33,
-        0,
-        Math.PI * 2
-    );
+    ctx.arc(cx, cy, 33, 0, Math.PI * 2);
     ctx.fillStyle = "#e36362";
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(
-        cx,
-        cy,
-        29,
-        0,
-        Math.PI * 2
-    );
+    ctx.arc(cx, cy, 29, 0, Math.PI * 2);
     ctx.fillStyle = "#f6b265";
     ctx.fill();
 
@@ -1842,44 +1537,24 @@ function drawCoinBlock(r, c, n) {
     ctx.font = "700 46px serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-
-    ctx.fillText(
-        n,
-        cx,
-        cy + 3
-    );
+    ctx.fillText(n, cx, cy + 3);
 }
 
 function drawCoin(r, c, now) {
     const { x, y } = centerXY(r, c);
-    const sx = Math.max(
-        0.1,
-        Math.abs(Math.cos(now / 150))
-    );
+    const sx = Math.max(0.1, Math.abs(Math.cos(now / 150)));
 
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(sx, 1);
 
     ctx.beginPath();
-    ctx.arc(
-        0,
-        0,
-        28,
-        0,
-        Math.PI * 2
-    );
+    ctx.arc(0, 0, 28, 0, Math.PI * 2);
     ctx.fillStyle = "#e36362";
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(
-        0,
-        0,
-        24,
-        0,
-        Math.PI * 2
-    );
+    ctx.arc(0, 0, 24, 0, Math.PI * 2);
     ctx.fillStyle = "#f6b265";
     ctx.fill();
 
@@ -1888,217 +1563,73 @@ function drawCoin(r, c, now) {
 
 function drawBoard(now) {
     ctx.fillStyle = COLORS.background;
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
             const key = `${r},${c}`;
 
-            if (
-                pushingBlock &&
-                key === pushBlockKey
-            ) {
-                drawCell(
-                    r,
-                    c,
-                    COLORS.floor
-                );
-
-                if (
-                    goal.r === r &&
-                    goal.c === c
-                ) {
-                    drawCell(
-                        r,
-                        c,
-                        COLORS.goal
-                    );
-                }
-
-                if (coins.has(key)) {
-                    drawCoin(
-                        r,
-                        c,
-                        now
-                    );
-                }
-
+            if (pushingBlock && key === pushBlockKey) {
+                drawCell(r, c, COLORS.floor);
+                if (goal.r === r && goal.c === c) drawCell(r, c, COLORS.goal);
+                if (coins.has(key)) drawCoin(r, c, now);
                 continue;
             }
 
-            if (walls.has(key)) {
-                drawCell(
-                    r,
-                    c,
-                    COLORS.wall
-                );
-            } else if (
-                coinBlocks.has(key) &&
-                coinsCollected <
-                    coinBlocks.get(key)
-            ) {
-                drawCoinBlock(
-                    r,
-                    c,
-                    coinBlocks.get(key)
-                );
-            } else if (
-                pushBlocks.has(key)
-            ) {
-                drawPushBlock(
-                    r,
-                    c,
-                    COLORS.pushBlock
-                );
-            } else if (
-                pinkPushBlocks.has(key)
-            ) {
-                drawPushBlock(
-                    r,
-                    c,
-                    COLORS.pinkPushBlock
-                );
-            } else if (
-                ramps.has(key)
-            ) {
-                drawRamp(
-                    r,
-                    c,
-                    ramps.get(key)
-                );
-            } else if (
-                voidBlocks.has(key)
-            ) {
-                drawCell(
-                    r,
-                    c,
-                    COLORS.void
-                );
-            } else if (
-                teleporterMap.has(key)
-            ) {
-                drawTeleporter(
-                    r,
-                    c,
-                    teleporterColor(
-                        teleporterMap.get(key)
-                    )
-                );
+            if (walls.has(key)) drawCell(r, c, COLORS.wall);
+            else if (coinBlocks.has(key) && coinsCollected < coinBlocks.get(key)) {
+                drawCoinBlock(r, c, coinBlocks.get(key));
+            } else if (pushBlocks.has(key)) {
+                drawPushBlock(r, c, COLORS.pushBlock);
+            } else if (pinkPushBlocks.has(key)) {
+                drawPushBlock(r, c, COLORS.pinkPushBlock);
+            } else if (ramps.has(key)) {
+                drawRamp(r, c, ramps.get(key));
+            } else if (voidBlocks.has(key)) {
+                drawCell(r, c, COLORS.void);
+            } else if (teleporterMap.has(key)) {
+                drawTeleporter(r, c, teleporterColor(teleporterMap.get(key)));
             } else {
-                drawCell(
-                    r,
-                    c,
-                    COLORS.floor
-                );
-
-                if (
-                    goal.r === r &&
-                    goal.c === c
-                ) {
-                    drawCell(
-                        r,
-                        c,
-                        COLORS.goal
-                    );
-                }
-
-                if (coins.has(key)) {
-                    drawCoin(
-                        r,
-                        c,
-                        now
-                    );
-                }
+                drawCell(r, c, COLORS.floor);
+                if (goal.r === r && goal.c === c) drawCell(r, c, COLORS.goal);
+                if (coins.has(key)) drawCoin(r, c, now);
             }
         }
     }
 
     if (pushingBlock) {
-        const t = Math.min(
-            1,
-            (now - pushMoveStart) /
-                MOVE_TIME
-        );
-
+        const t = Math.min(1, (now - pushMoveStart) / MOVE_TIME);
         const e = t * (2 - t);
 
         drawPushBlock(
-            pushBlockFromR +
-                (pushBlockToR -
-                    pushBlockFromR) *
-                    e,
-            pushBlockFromC +
-                (pushBlockToC -
-                    pushBlockFromC) *
-                    e,
-            pushingPinkBlock
-                ? COLORS.pinkPushBlock
-                : COLORS.pushBlock
+            pushBlockFromR + (pushBlockToR - pushBlockFromR) * e,
+            pushBlockFromC + (pushBlockToC - pushBlockFromC) * e,
+            pushingPinkBlock ? COLORS.pinkPushBlock : COLORS.pushBlock
         );
     }
 }
 
 function drawBall() {
-    if (
-        state === "won" ||
-        state === "deadWait" ||
-        state === "deadBlack"
-    ) {
-        return;
-    }
+    if (state === "won" || state === "deadWait" || state === "deadBlack") return;
 
-    const { x, y } =
-        centerXY(
-            drawR,
-            drawC
-        );
-
+    const { x, y } = centerXY(drawR, drawC);
     let alpha = 1;
 
-    if (
-        state === "deathFade" ||
-        state === "winFade"
-    ) {
-        const t = Math.min(
-            1,
-            (performance.now() -
-                fadeStart) /
-                FADE_TIME
-        );
-
-        alpha = Math.max(
-            0,
-            1 - t
-        );
+    if (state === "deathFade" || state === "winFade") {
+        const t = Math.min(1, (performance.now() - fadeStart) / FADE_TIME);
+        alpha = Math.max(0, 1 - t);
     }
 
     ctx.save();
     ctx.globalAlpha = alpha;
 
     ctx.beginPath();
-    ctx.arc(
-        x,
-        y,
-        44,
-        0,
-        Math.PI * 2
-    );
+    ctx.arc(x, y, 44, 0, Math.PI * 2);
     ctx.fillStyle = "#000";
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(
-        x,
-        y,
-        37,
-        0,
-        Math.PI * 2
-    );
+    ctx.arc(x, y, 37, 0, Math.PI * 2);
     ctx.fillStyle = COLORS.ball;
     ctx.fill();
 
@@ -2106,71 +1637,51 @@ function drawBall() {
 }
 
 function render(now) {
-    if (state === "menu") {
-        return;
-    }
-
+    if (state === "menu") return;
     drawBoard(now);
     drawBall();
 }
 
 function reset() {
     hideLevelCompletePopup();
+    hideSolverResultPopup();
     parseLevel(currentLevelCode);
 
-    ball = {
-        ...start
-    };
-
+    ball = { ...start };
     drawR = ball.r;
     drawC = ball.c;
-
     fromR = ball.r;
     fromC = ball.c;
-
     toR = ball.r;
     toC = ball.c;
 
     moving = false;
-
     pushingBlock = false;
     pushBlockKey = null;
     pushingPinkBlock = false;
-
     rampTurning = false;
 
     state = "playing";
-
     fadeStart = 0;
     pendingState = null;
-
     deathFadeStart = 0;
     deathWaitStart = 0;
     deathBlackStart = 0;
-
-    direction =
-        directions.ArrowRight;
+    direction = directions.ArrowRight;
 
     playBackgroundMusic();
-
-    render(
-        performance.now()
-    );
-
+    render(performance.now());
     canvas.focus();
 }
 
 function beginFade(result, now) {
     moving = false;
-
     pushingBlock = false;
     pushBlockKey = null;
     pushingPinkBlock = false;
-
     rampTurning = false;
     fadeStart = now;
     pendingState = result;
-
     stopBackgroundMusic();
 
     if (result === "dead") {
@@ -2196,21 +1707,17 @@ function startDeathBlackFade(now) {
 
 function finishWin() {
     state = "won";
+    hideSolverResultPopup();
     showLevelCompletePopup();
 }
 
 function collectCoin(r, c) {
     const key = `${r},${c}`;
-
-    if (!coins.has(key)) {
-        return false;
-    }
+    if (!coins.has(key)) return false;
 
     coins.delete(key);
     coinsCollected++;
-
     playSound(coinSound);
-
     return true;
 }
 
@@ -2218,156 +1725,65 @@ function canPushBlock(blockR, blockC, dir) {
     const r = blockR + dir.dr;
     const c = blockC + dir.dc;
 
-    if (!isInside(r, c)) {
-        return false;
-    }
+    if (!isInside(r, c)) return false;
 
     const key = `${r},${c}`;
 
-    if (
-        pushBlocks.has(key) ||
-        pinkPushBlocks.has(key)
-    ) {
-        return false;
-    }
-
-    if (
-        walls.has(key) ||
-        voidBlocks.has(key) ||
-        ramps.has(key)
-    ) {
-        return false;
-    }
-
-    if (
-        goal.r === r &&
-        goal.c === c
-    ) {
-        return false;
-    }
-
-    if (
-        coinBlocks.has(key) &&
-        coinsCollected <
-            coinBlocks.get(key)
-    ) {
-        return false;
-    }
+    if (pushBlocks.has(key) || pinkPushBlocks.has(key)) return false;
+    if (walls.has(key) || voidBlocks.has(key) || ramps.has(key)) return false;
+    if (goal.r === r && goal.c === c) return false;
+    if (coinBlocks.has(key) && coinsCollected < coinBlocks.get(key)) return false;
 
     return true;
 }
 
-function startPush(
-    blockR,
-    blockC,
-    dir,
-    playMovementSound
-) {
-    const blockKey =
-        `${blockR},${blockC}`;
+function startPush(blockR, blockC, dir, playMovementSound) {
+    const blockKey = `${blockR},${blockC}`;
 
-    if (
-        !pushBlocks.has(blockKey) &&
-        !pinkPushBlocks.has(blockKey)
-    ) {
-        return false;
-    }
+    if (!pushBlocks.has(blockKey) && !pinkPushBlocks.has(blockKey)) return false;
+    if (!canPushBlock(blockR, blockC, dir)) return false;
 
-    if (
-        !canPushBlock(
-            blockR,
-            blockC,
-            dir
-        )
-    ) {
-        return false;
-    }
-
-    const destinationR =
-        blockR + dir.dr;
-
-    const destinationC =
-        blockC + dir.dc;
+    const destinationR = blockR + dir.dr;
+    const destinationC = blockC + dir.dc;
 
     pushingBlock = true;
     moving = true;
     pushBlockKey = blockKey;
-
-    pushingPinkBlock =
-        pinkPushBlocks.has(
-            blockKey
-        );
+    pushingPinkBlock = pinkPushBlocks.has(blockKey);
 
     pushBallFromR = ball.r;
     pushBallFromC = ball.c;
-
     pushBallToR = blockR;
     pushBallToC = blockC;
 
     pushBlockFromR = blockR;
     pushBlockFromC = blockC;
+    pushBlockToR = destinationR;
+    pushBlockToC = destinationC;
+    pushMoveStart = performance.now();
 
-    pushBlockToR =
-        destinationR;
-
-    pushBlockToC =
-        destinationC;
-
-    pushMoveStart =
-        performance.now();
-
-    if (playMovementSound) {
-        playSound(moveSound);
-    }
-
+    if (playMovementSound) playSound(moveSound);
     return true;
 }
 
 function finishPush(now) {
-    const oldBlockKey =
-        pushBlockKey;
+    const oldBlockKey = pushBlockKey;
+    const destinationKey = `${pushBlockToR},${pushBlockToC}`;
+    const wasPink = pushingPinkBlock;
 
-    const destinationKey =
-        `${pushBlockToR},${pushBlockToC}`;
-
-    const wasPink =
-        pushingPinkBlock;
-
-    if (
-        pinkPushBlocks.has(
-            oldBlockKey
-        )
-    ) {
-        pinkPushBlocks.delete(
-            oldBlockKey
-        );
-
-        pinkPushBlocks.add(
-            destinationKey
-        );
+    if (pinkPushBlocks.has(oldBlockKey)) {
+        pinkPushBlocks.delete(oldBlockKey);
+        pinkPushBlocks.add(destinationKey);
     } else {
-        pushBlocks.delete(
-            oldBlockKey
-        );
-
-        pushBlocks.add(
-            destinationKey
-        );
+        pushBlocks.delete(oldBlockKey);
+        pushBlocks.add(destinationKey);
     }
 
-    ball.r =
-        pushBallToR;
-
-    ball.c =
-        pushBallToC;
-
+    ball.r = pushBallToR;
+    ball.c = pushBallToC;
     drawR = ball.r;
     drawC = ball.c;
-
-    collectCoin(
-        ball.r,
-        ball.c
-    );
+    collectCoin(ball.r, ball.c);
 
     pushingBlock = false;
     moving = false;
@@ -2375,54 +1791,15 @@ function finishPush(now) {
     pushingPinkBlock = false;
 
     if (wasPink) {
-        const nr =
-            ball.r +
-            direction.dr;
-
-        const nc =
-            ball.c +
-            direction.dc;
-
-        const nextKey =
-            `${nr},${nc}`;
+        const nr = ball.r + direction.dr;
+        const nc = ball.c + direction.dc;
+        const nextKey = `${nr},${nc}`;
 
         if (
             isInside(nr, nc) &&
-            pinkPushBlocks.has(
-                nextKey
-            ) &&
-            startPush(
-                nr,
-                nc,
-                direction,
-                false
-            )
+            pinkPushBlocks.has(nextKey) &&
+            startPush(nr, nc, direction, false)
         ) {
-            render(now);
-            return;
-        }
-
-        const nextPinkKey =
-            `${pushBlockToR},${pushBlockToC}`;
-
-        if (
-            isInside(nr, nc) &&
-            canPushBlock(
-                pushBlockToR,
-                pushBlockToC,
-                direction
-            ) &&
-            pinkPushBlocks.has(
-                nextPinkKey
-            )
-        ) {
-            startPush(
-                pushBlockToR,
-                pushBlockToC,
-                direction,
-                false
-            );
-
             render(now);
             return;
         }
@@ -2433,122 +1810,49 @@ function finishPush(now) {
 
 function rampTurnDirection(id, dir) {
     if (id === 16) {
-        if (
-            dir ===
-            directions.ArrowDown
-        ) {
-            return directions.ArrowLeft;
-        }
-
-        if (
-            dir ===
-            directions.ArrowRight
-        ) {
-            return directions.ArrowUp;
-        }
+        if (dir === directions.ArrowDown) return directions.ArrowLeft;
+        if (dir === directions.ArrowRight) return directions.ArrowUp;
     } else if (id === 17) {
-        if (
-            dir ===
-            directions.ArrowDown
-        ) {
-            return directions.ArrowRight;
-        }
-
-        if (
-            dir ===
-            directions.ArrowLeft
-        ) {
-            return directions.ArrowUp;
-        }
+        if (dir === directions.ArrowDown) return directions.ArrowRight;
+        if (dir === directions.ArrowLeft) return directions.ArrowUp;
     } else if (id === 18) {
-        if (
-            dir ===
-            directions.ArrowUp
-        ) {
-            return directions.ArrowLeft;
-        }
-
-        if (
-            dir ===
-            directions.ArrowRight
-        ) {
-            return directions.ArrowDown;
-        }
+        if (dir === directions.ArrowUp) return directions.ArrowLeft;
+        if (dir === directions.ArrowRight) return directions.ArrowDown;
     } else if (id === 19) {
-        if (
-            dir ===
-            directions.ArrowUp
-        ) {
-            return directions.ArrowRight;
-        }
-
-        if (
-            dir ===
-            directions.ArrowLeft
-        ) {
-            return directions.ArrowDown;
-        }
+        if (dir === directions.ArrowUp) return directions.ArrowRight;
+        if (dir === directions.ArrowLeft) return directions.ArrowDown;
     }
 
     return null;
 }
 
 function getRampTurn(r, c, dir) {
-    const id =
-        ramps.get(
-            `${r},${c}`
-        );
-
-    if (!id) {
-        return null;
-    }
-
-    return rampTurnDirection(
-        id,
-        dir
-    );
+    const id = ramps.get(`${r},${c}`);
+    return id ? rampTurnDirection(id, dir) : null;
 }
 
-function startRampTurn(
-    r,
-    c,
-    newDir
-) {
+function startRampTurn(r, c, newDir) {
     rampTurning = true;
     moving = true;
     direction = newDir;
 
     rampFromR = ball.r;
     rampFromC = ball.c;
-
     rampControlR = r;
     rampControlC = c;
-
-    rampToR =
-        r + newDir.dr;
-
-    rampToC =
-        c + newDir.dc;
-
-    rampMoveStart =
-        performance.now();
+    rampToR = r + newDir.dr;
+    rampToC = c + newDir.dc;
+    rampMoveStart = performance.now();
 
     playSound(moveSound);
-
     return true;
 }
 
-function startNormalMove(
-    r,
-    c,
-    now
-) {
+function startNormalMove(r, c, now) {
     fromR = ball.r;
     fromC = ball.c;
-
     toR = r;
     toC = c;
-
     moveStart = now;
     moving = true;
 }
@@ -2556,59 +1860,24 @@ function startNormalMove(
 function handleArrival(now) {
     ball.r = toR;
     ball.c = toC;
+    collectCoin(ball.r, ball.c);
 
-    collectCoin(
-        ball.r,
-        ball.c
-    );
+    let key = `${ball.r},${ball.c}`;
 
-    let key =
-        `${ball.r},${ball.c}`;
+    if (teleporterMap.has(key)) {
+        const type = teleporterMap.get(key);
+        const list = teleporterList(type);
+        let bestDist = Infinity;
+        let bestTp = null;
 
-    if (
-        teleporterMap.has(key)
-    ) {
-        const type =
-            teleporterMap.get(
-                key
-            );
-
-        const list =
-            teleporterList(
-                type
-            );
-
-        let bestDist =
-            Infinity;
-
-        let bestTp =
-            null;
-
-        for (
-            const tp of list
-        ) {
-            if (
-                tp.key === key
-            ) {
-                continue;
-            }
+        for (const tp of list) {
+            if (tp.key === key) continue;
 
             const dist =
-                Math.pow(
-                    tp.r -
-                        ball.r,
-                    2
-                ) +
-                Math.pow(
-                    tp.c -
-                        ball.c,
-                    2
-                );
+                (tp.r - ball.r) ** 2 +
+                (tp.c - ball.c) ** 2;
 
-            if (
-                dist <
-                bestDist
-            ) {
+            if (dist < bestDist) {
                 bestDist = dist;
                 bestTp = tp;
             }
@@ -2617,82 +1886,32 @@ function handleArrival(now) {
         if (bestTp) {
             ball.r = bestTp.r;
             ball.c = bestTp.c;
-
             drawR = ball.r;
             drawC = ball.c;
-
-            key =
-                `${ball.r},${ball.c}`;
-
-            collectCoin(
-                ball.r,
-                ball.c
-            );
-
-            playSound(
-                teleportSound
-            );
+            key = `${ball.r},${ball.c}`;
+            collectCoin(ball.r, ball.c);
+            playSound(teleportSound);
         }
     }
 
-    const nr =
-        ball.r +
-        direction.dr;
-
-    const nc =
-        ball.c +
-        direction.dc;
-
-    const nextKey =
-        `${nr},${nc}`;
-
-    const nextRamp =
-        isInside(nr, nc) &&
-        ramps.has(nextKey);
-
-    const nextPush =
-        isInside(nr, nc) &&
-        (
-            pushBlocks.has(
-                nextKey
-            ) ||
-            pinkPushBlocks.has(
-                nextKey
-            )
-        );
-
-    const nextWall =
-        isInside(nr, nc) &&
-        isWall(nr, nc);
+    const nr = ball.r + direction.dr;
+    const nc = ball.c + direction.dc;
+    const nextKey = `${nr},${nc}`;
+    const nextRamp = isInside(nr, nc) && ramps.has(nextKey);
+    const nextPush = isInside(nr, nc) && (pushBlocks.has(nextKey) || pinkPushBlocks.has(nextKey));
+    const nextWall = isInside(nr, nc) && isWall(nr, nc);
 
     if (nextRamp) {
-        const newDir =
-            getRampTurn(
-                nr,
-                nc,
-                direction
-            );
+        const newDir = getRampTurn(nr, nc, direction);
 
-        if (newDir) {
-            startRampTurn(
-                nr,
-                nc,
-                newDir
-            );
-        } else {
+        if (newDir) startRampTurn(nr, nc, newDir);
+        else {
             moving = false;
             drawR = ball.r;
             drawC = ball.c;
         }
     } else if (nextPush) {
-        if (
-            !startPush(
-                nr,
-                nc,
-                direction,
-                false
-            )
-        ) {
+        if (!startPush(nr, nc, direction, false)) {
             moving = false;
             drawR = ball.r;
             drawC = ball.c;
@@ -2702,111 +1921,49 @@ function handleArrival(now) {
         drawR = ball.r;
         drawC = ball.c;
     } else {
-        startNormalMove(
-            nr,
-            nc,
-            now
-        );
+        startNormalMove(nr, nc, now);
     }
 }
 
 function launch(dir) {
-    if (
-        state !== "playing" ||
-        moving
-    ) {
-        return;
-    }
+    if (state !== "playing" || moving) return;
 
     direction = dir;
 
-    const nr =
-        ball.r + dir.dr;
+    const nr = ball.r + dir.dr;
+    const nc = ball.c + dir.dc;
 
-    const nc =
-        ball.c + dir.dc;
+    if (!isInside(nr, nc)) {
+        render(performance.now());
+        return;
+    }
 
-    if (
-        !isInside(nr, nc)
-    ) {
-        render(
-            performance.now()
-        );
+    const nextKey = `${nr},${nc}`;
+
+    if (ramps.has(nextKey)) {
+        const newDir = getRampTurn(nr, nc, dir);
+
+        if (newDir) startRampTurn(nr, nc, newDir);
+        else render(performance.now());
 
         return;
     }
 
-    const nextKey =
-        `${nr},${nc}`;
-
-    if (
-        ramps.has(nextKey)
-    ) {
-        const newDir =
-            getRampTurn(
-                nr,
-                nc,
-                dir
-            );
-
-        if (newDir) {
-            startRampTurn(
-                nr,
-                nc,
-                newDir
-            );
-        } else {
-            render(
-                performance.now()
-            );
-        }
-
+    if (pushBlocks.has(nextKey) || pinkPushBlocks.has(nextKey)) {
+        if (!startPush(nr, nc, dir, true)) render(performance.now());
         return;
     }
 
-    if (
-        pushBlocks.has(
-            nextKey
-        ) ||
-        pinkPushBlocks.has(
-            nextKey
-        )
-    ) {
-        if (
-            !startPush(
-                nr,
-                nc,
-                dir,
-                true
-            )
-        ) {
-            render(
-                performance.now()
-            );
-        }
-
-        return;
-    }
-
-    if (
-        isWall(nr, nc)
-    ) {
-        render(
-            performance.now()
-        );
-
+    if (isWall(nr, nc)) {
+        render(performance.now());
         return;
     }
 
     fromR = ball.r;
     fromC = ball.c;
-
     toR = nr;
     toC = nc;
-
-    moveStart =
-        performance.now();
-
+    moveStart = performance.now();
     moving = true;
 
     playSound(moveSound);
@@ -2815,295 +1972,93 @@ function launch(dir) {
 function update(now) {
     if (state !== "menu") {
         if (rampTurning) {
-            const t =
-                Math.min(
-                    1,
-                    (now -
-                        rampMoveStart) /
-                        MOVE_TIME
-                );
-
-            const e =
-                t * t *
-                (3 - 2 * t);
+            const t = Math.min(1, (now - rampMoveStart) / MOVE_TIME);
+            const e = t * t * (3 - 2 * t);
 
             drawR =
-                (1 - e) *
-                    (1 - e) *
-                    rampFromR +
-                2 *
-                    (1 - e) *
-                    e *
-                    rampControlR +
-                e *
-                    e *
-                    rampToR;
+                (1 - e) * (1 - e) * rampFromR +
+                2 * (1 - e) * e * rampControlR +
+                e * e * rampToR;
 
             drawC =
-                (1 - e) *
-                    (1 - e) *
-                    rampFromC +
-                2 *
-                    (1 - e) *
-                    e *
-                    rampControlC +
-                e *
-                    e *
-                    rampToC;
+                (1 - e) * (1 - e) * rampFromC +
+                2 * (1 - e) * e * rampControlC +
+                e * e * rampToC;
 
             if (t >= 1) {
                 ball.r = rampToR;
                 ball.c = rampToC;
-
                 drawR = ball.r;
                 drawC = ball.c;
-
                 rampTurning = false;
 
-                if (
-                    !isInside(
-                        ball.r,
-                        ball.c
-                    )
-                ) {
-                    beginFade(
-                        "dead",
-                        now
-                    );
-                } else if (
-                    goal.r === ball.r &&
-                    goal.c === ball.c
-                ) {
-                    beginFade(
-                        "won",
-                        now
-                    );
-                } else if (
-                    voidBlocks.has(
-                        `${ball.r},${ball.c}`
-                    )
-                ) {
-                    beginFade(
-                        "dead",
-                        now
-                    );
-                } else if (
-                    isWall(
-                        ball.r,
-                        ball.c
-                    )
-                ) {
+                if (!isInside(ball.r, ball.c)) beginFade("dead", now);
+                else if (goal.r === ball.r && goal.c === ball.c) beginFade("won", now);
+                else if (voidBlocks.has(`${ball.r},${ball.c}`)) beginFade("dead", now);
+                else if (isWall(ball.r, ball.c)) {
                     moving = false;
-
                     render(now);
                 } else {
                     toR = ball.r;
                     toC = ball.c;
-
                     handleArrival(now);
                 }
             }
         } else if (pushingBlock) {
-            const t =
-                (now -
-                    pushMoveStart) /
-                MOVE_TIME;
+            const t = (now - pushMoveStart) / MOVE_TIME;
+            const et = Math.min(1, t);
+            const e = et * (2 - et);
 
-            const et =
-                Math.min(
-                    1,
-                    t
-                );
+            drawR = pushBallFromR + (pushBallToR - pushBallFromR) * e;
+            drawC = pushBallFromC + (pushBallToC - pushBallFromC) * e;
 
-            const e =
-                et * (2 - et);
-
-            drawR =
-                pushBallFromR +
-                (
-                    pushBallToR -
-                    pushBallFromR
-                ) * e;
-
-            drawC =
-                pushBallFromC +
-                (
-                    pushBallToC -
-                    pushBallFromC
-                ) * e;
-
-            if (t >= 1) {
-                finishPush(now);
-            }
+            if (t >= 1) finishPush(now);
         } else if (moving) {
-            const t =
-                (now -
-                    moveStart) /
-                MOVE_TIME;
-
-            const targetKey =
-                `${toR},${toC}`;
-
-            const isOut =
-                !isInside(
-                    toR,
-                    toC
-                );
-
-            const isVoid =
-                voidBlocks.has(
-                    targetKey
-                );
-
-            const isGoal =
-                goal.r === toR &&
-                goal.c === toC;
-
-            const isSpecial =
-                isOut ||
-                isVoid ||
-                isGoal;
-
-            const limit =
-                isSpecial
-                    ? 0.25
-                    : 1;
+            const t = (now - moveStart) / MOVE_TIME;
+            const targetKey = `${toR},${toC}`;
+            const isOut = !isInside(toR, toC);
+            const isVoid = voidBlocks.has(targetKey);
+            const isGoal = goal.r === toR && goal.c === toC;
+            const isSpecial = isOut || isVoid || isGoal;
+            const limit = isSpecial ? 0.25 : 1;
 
             if (t >= limit) {
-                const et =
-                    isSpecial
-                        ? 0.25
-                        : 1;
+                const et = isSpecial ? 0.25 : 1;
+                const e = et * (2 - et);
 
-                const e =
-                    et * (2 - et);
-
-                drawR =
-                    fromR +
-                    (
-                        toR -
-                        fromR
-                    ) * e;
-
-                drawC =
-                    fromC +
-                    (
-                        toC -
-                        fromC
-                    ) * e;
+                drawR = fromR + (toR - fromR) * e;
+                drawC = fromC + (toC - fromC) * e;
 
                 if (isSpecial) {
-                    beginFade(
-                        isGoal
-                            ? "won"
-                            : "dead",
-                        now
-                    );
+                    beginFade(isGoal ? "won" : "dead", now);
                 } else {
                     handleArrival(now);
                 }
             } else {
-                const e =
-                    t * (2 - t);
-
-                drawR =
-                    fromR +
-                    (
-                        toR -
-                        fromR
-                    ) * e;
-
-                drawC =
-                    fromC +
-                    (
-                        toC -
-                        fromC
-                    ) * e;
+                const e = t * (2 - t);
+                drawR = fromR + (toR - fromR) * e;
+                drawC = fromC + (toC - fromC) * e;
             }
-        } else if (
-            state === "winFade"
-        ) {
-            const t =
-                Math.min(
-                    1,
-                    (now -
-                        fadeStart) /
-                        FADE_TIME
-                );
-
-            if (t >= 1) {
-                finishWin();
-            }
-        } else if (
-            state === "deathFade"
-        ) {
-            const t =
-                Math.min(
-                    1,
-                    (now -
-                        deathFadeStart) /
-                        FADE_TIME
-                );
-
-            if (t >= 1) {
-                dieWait(now);
-            }
-        } else if (
-            state === "deadWait"
-        ) {
-            if (
-                now -
-                    deathWaitStart >=
-                DEATH_DELAY
-            ) {
-                startDeathBlackFade(now);
-            }
-        } else if (
-            state === "deadBlack"
-        ) {
-            const t =
-                Math.min(
-                    1,
-                    (now -
-                        deathBlackStart) /
-                        BLACK_FADE_TIME
-                );
+        } else if (state === "winFade") {
+            const t = Math.min(1, (now - fadeStart) / FADE_TIME);
+            if (t >= 1) finishWin();
+        } else if (state === "deathFade") {
+            const t = Math.min(1, (now - deathFadeStart) / FADE_TIME);
+            if (t >= 1) dieWait(now);
+        } else if (state === "deadWait") {
+            if (now - deathWaitStart >= DEATH_DELAY) startDeathBlackFade(now);
+        } else if (state === "deadBlack") {
+            const t = Math.min(1, (now - deathBlackStart) / BLACK_FADE_TIME);
 
             if (t >= 1) {
                 reset();
-                setFade(
-                    true,
-                    BLACK_FADE_TIME
-                );
+                setFade(true, BLACK_FADE_TIME);
 
-                requestAnimationFrame(
-                    () => {
-                        requestAnimationFrame(
-                            () => {
-                                fadeFromBlack(
-                                    BLACK_FADE_TIME
-                                );
-                            }
-                        );
-                    }
-                );
-            }
-        } else if (
-            state === "fading"
-        ) {
-            const t =
-                Math.min(
-                    1,
-                    (now -
-                        fadeStart) /
-                        FADE_TIME
-                );
-
-            if (
-                t >= 1 &&
-                pendingState === "won"
-            ) {
-                finishWin();
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        fadeFromBlack(BLACK_FADE_TIME);
+                    });
+                });
             }
         }
 
@@ -3113,105 +2068,721 @@ function update(now) {
     requestAnimationFrame(update);
 }
 
-window.addEventListener(
-    "keydown",
-    event => {
-        if (
-            state === "menu" ||
-            state === "won" ||
-            state === "deadWait" ||
-            state === "deadBlack"
-        ) {
-            return;
+window.addEventListener("keydown", event => {
+    if (state === "menu" || state === "won" || state === "deadWait" || state === "deadBlack") return;
+
+    if (macroPlaying || solverBusy) {
+        event.preventDefault();
+        return;
+    }
+
+    const dir = keyToDir[event.key] || keyToDir[event.code];
+
+    if (dir) {
+        event.preventDefault();
+        if (!moving && state === "playing") launch(dir);
+    }
+
+    if (event.key === "r" || event.key === "R" || event.key === "Enter") {
+        if (state === "playing") reset();
+    }
+}, { passive: false });
+
+backBtn.addEventListener("click", () => {
+    if (
+        state === "won" ||
+        state === "deathFade" ||
+        state === "deadWait" ||
+        state === "deadBlack" ||
+        solverBusy ||
+        macroPlaying
+    ) return;
+
+    exitLevel();
+});
+
+restartBtn.addEventListener("click", () => {
+    if (
+        transitionBusy ||
+        solverBusy ||
+        macroPlaying ||
+        state === "won" ||
+        state === "deathFade" ||
+        state === "deadWait" ||
+        state === "deadBlack"
+    ) return;
+
+    reset();
+    canvas.focus();
+});
+
+levelCompleteExit.addEventListener("click", () => {
+    if (transitionBusy || solverBusy || macroPlaying) return;
+    exitLevel();
+});
+
+solverCloseBtn.addEventListener("click", () => {
+    if (macroPlaying) return;
+    hideSolverResultPopup();
+    canvas.focus();
+});
+
+solverPlayBtn.addEventListener("click", async () => {
+    if (macroPlaying || !solutionMacro.length || state === "won") return;
+
+    hideSolverResultPopup();
+    await playSolutionMacro();
+});
+
+canvas.addEventListener("click", () => {
+    if (state === "playing" && !solverBusy && !macroPlaying) canvas.focus();
+});
+
+function buildSolverModel(codeStr) {
+    const parts = codeStr.trim().split(/\s+/).map(Number);
+    const height = parts.pop();
+    const width = parts.pop();
+    const cells = parts;
+
+    const model = {
+        rows: height,
+        cols: width,
+        start: null,
+        goal: null,
+        walls: new Set(),
+        coins: [],
+        coinIndex: new Map(),
+        coinBlocks: new Map(),
+        voids: new Set(),
+        blue: [],
+        pink: [],
+        ramps: new Map(),
+        teleportType: new Map(),
+        teleports: new Map(),
+        teleportDest: new Map()
+    };
+
+    for (let i = 0; i < cells.length; i++) {
+        const r = Math.floor(i / width);
+        const c = i % width;
+        const id = cells[i];
+
+        if (id === 2) {
+            model.walls.add(i);
+        } else if (id === 3) {
+            model.goal = i;
+        } else if (id === 4) {
+            model.coinIndex.set(i, model.coins.length);
+            model.coins.push(i);
+        } else if (id >= 5 && id <= 9) {
+            model.coinBlocks.set(i, id - 4);
+        } else if (id >= 10 && id <= 11) {
+            if (!model.teleports.has(id)) model.teleports.set(id, []);
+            model.teleports.get(id).push(i);
+            model.teleportType.set(i, id);
+        } else if (id === 12) {
+            model.voids.add(i);
+        } else if (id === 13) {
+            model.blue.push(i);
+        } else if (id === 14) {
+            model.pink.push(i);
+        } else if (id >= 16 && id <= 19) {
+            model.ramps.set(i, id);
+        } else if (id >= 20 && id <= 21) {
+            if (!model.teleports.has(id)) model.teleports.set(id, []);
+            model.teleports.get(id).push(i);
+            model.teleportType.set(i, id);
+        } else if (id === 15) {
+            model.start = i;
+        }
+    }
+
+    for (const [type, list] of model.teleports) {
+        for (const source of list) {
+            if (list.length < 2) continue;
+
+            let best = null;
+            let bestDist = Infinity;
+            const sr = Math.floor(source / width);
+            const sc = source % width;
+
+            for (const candidate of list) {
+                if (candidate === source) continue;
+
+                const cr = Math.floor(candidate / width);
+                const cc = candidate % width;
+                const dist = (cr - sr) ** 2 + (cc - sc) ** 2;
+
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = candidate;
+                }
+            }
+
+            if (best !== null) model.teleportDest.set(source, best);
+        }
+    }
+
+    return model;
+}
+
+function solverRow(model, cell) {
+    return Math.floor(cell / model.cols);
+}
+
+function solverCol(model, cell) {
+    return cell % model.cols;
+}
+
+function solverCell(model, r, c) {
+    return r * model.cols + c;
+}
+
+function solverInside(model, r, c) {
+    return r >= 0 && r < model.rows && c >= 0 && c < model.cols;
+}
+
+function solverContains(arr, cell) {
+    return arr.includes(cell);
+}
+
+function solverCoinCount(mask, model) {
+    let count = 0;
+
+    for (let i = 0; i < model.coins.length; i++) {
+        if ((mask & (1n << BigInt(i))) !== 0n) count++;
+    }
+
+    return count;
+}
+
+function solverCollect(state, cell, model) {
+    const coinIndex = model.coinIndex.get(cell);
+    if (coinIndex === undefined) return;
+
+    const bit = 1n << BigInt(coinIndex);
+    if ((state.coins & bit) !== 0n) return;
+
+    state.coins |= bit;
+    state.coinCount++;
+}
+
+function solverIsWall(state, cell, model) {
+    if (model.walls.has(cell)) return true;
+
+    const required = model.coinBlocks.get(cell);
+    if (required !== undefined && state.coinCount < required) return true;
+
+    return false;
+}
+
+function solverRampTurn(id, dir) {
+    if (id === 16) {
+        if (dir === 0) return null;
+        if (dir === 1) return 0;
+        if (dir === 2) return 3;
+        return null;
+    }
+
+    if (id === 17) {
+        if (dir === 0) return null;
+        if (dir === 1) return null;
+        if (dir === 2) return 1;
+        return 0;
+    }
+
+    if (id === 18) {
+        if (dir === 0) return 3;
+        if (dir === 1) return 2;
+        return null;
+    }
+
+    if (id === 19) {
+        if (dir === 0) return 1;
+        if (dir === 3) return 2;
+        return null;
+    }
+
+    return null;
+}
+
+const SOLVER_DR = [-1, 0, 1, 0];
+const SOLVER_DC = [0, 1, 0, -1];
+const SOLVER_DIR_NAMES = ["Up", "Right", "Down", "Left"];
+
+function solverStateKey(state) {
+    return [
+        state.r,
+        state.c,
+        state.dir,
+        state.coins.toString(36),
+        state.coinCount,
+        state.blue.join("."),
+        state.pink.join(".")
+    ].join("|");
+}
+
+function solverCanonicalPositions(arr) {
+    return [...arr].sort((a, b) => a - b);
+}
+
+function solverCanPush(state, index, dir, model) {
+    const r = solverRow(model, index) + SOLVER_DR[dir];
+    const c = solverCol(model, index) + SOLVER_DC[dir];
+
+    if (!solverInside(model, r, c)) return false;
+
+    const target = solverCell(model, r, c);
+
+    if (solverContains(state.blue, target) || solverContains(state.pink, target)) return false;
+    if (model.walls.has(target) || model.voids.has(target) || model.ramps.has(target)) return false;
+    if (model.goal === target) return false;
+
+    const required = model.coinBlocks.get(target);
+    if (required !== undefined && state.coinCount < required) return false;
+
+    return true;
+}
+
+function solverMoveBlock(state, blockArray, blockIndex, destination) {
+    blockArray[blockIndex] = destination;
+    blockArray.sort((a, b) => a - b);
+}
+
+function solverAutomatic(state, model) {
+    const seen = new Set();
+
+    for (let safety = 0; safety < 100000; safety++) {
+        const localKey = solverStateKey(state);
+
+        if (seen.has(localKey)) return { type: "loop" };
+        seen.add(localKey);
+
+        const current = solverCell(model, state.r, state.c);
+        solverCollect(state, current, model);
+
+        if (model.teleportDest.has(current)) {
+            const destination = model.teleportDest.get(current);
+            state.r = solverRow(model, destination);
+            state.c = solverCol(model, destination);
+            solverCollect(state, destination, model);
         }
 
-        const dir =
-            keyToDir[event.key] ||
-            keyToDir[event.code];
+        const nr = state.r + SOLVER_DR[state.dir];
+        const nc = state.c + SOLVER_DC[state.dir];
 
-        if (dir) {
-            event.preventDefault();
+        const next = solverInside(model, nr, nc) ? solverCell(model, nr, nc) : -1;
 
-            if (
-                !moving &&
-                state === "playing"
-            ) {
-                launch(dir);
+        if (next !== -1 && model.ramps.has(next)) {
+            const newDir = solverRampTurn(model.ramps.get(next), state.dir);
+
+            if (newDir === null) return { type: "stable", state };
+
+            state.dir = newDir;
+            state.r = nr + SOLVER_DR[newDir];
+            state.c = nc + SOLVER_DC[newDir];
+
+            if (!solverInside(model, state.r, state.c)) return { type: "dead" };
+
+            const destination = solverCell(model, state.r, state.c);
+
+            if (destination === model.goal) return { type: "won", state };
+            if (model.voids.has(destination)) return { type: "dead" };
+            if (solverIsWall(state, destination, model)) return { type: "stable", state };
+
+            continue;
+        }
+
+        if (next !== -1 && (solverContains(state.blue, next) || solverContains(state.pink, next))) {
+            const isPink = solverContains(state.pink, next);
+            const array = isPink ? state.pink : state.blue;
+            const index = array.indexOf(next);
+
+            if (!solverCanPush(state, next, state.dir, model)) {
+                return { type: "stable", state };
+            }
+
+            let blockPosition = next;
+
+            while (true) {
+                if (!solverCanPush(state, blockPosition, state.dir, model)) break;
+
+                const br = solverRow(model, blockPosition);
+                const bc = solverCol(model, blockPosition);
+                const destination = solverCell(
+                    model,
+                    br + SOLVER_DR[state.dir],
+                    bc + SOLVER_DC[state.dir]
+                );
+
+                const blockIndex = array.indexOf(blockPosition);
+                if (blockIndex === -1) return { type: "loop" };
+
+                solverMoveBlock(state, array, blockIndex, destination);
+
+                state.r = br;
+                state.c = bc;
+                solverCollect(state, solverCell(model, state.r, state.c), model);
+
+                if (!isPink) break;
+
+                blockPosition = destination;
+
+                if (!solverCanPush(state, blockPosition, state.dir, model)) break;
+            }
+
+            return { type: "stable", state };
+        }
+
+        if (next !== -1 && solverIsWall(state, next, model)) {
+            return { type: "stable", state };
+        }
+
+        state.r = nr;
+        state.c = nc;
+
+        if (!solverInside(model, state.r, state.c)) return { type: "dead" };
+
+        const destination = solverCell(model, state.r, state.c);
+
+        if (destination === model.goal) return { type: "won", state };
+        if (model.voids.has(destination)) return { type: "dead" };
+    }
+
+    return { type: "loop" };
+}
+
+function solverApplyInput(baseState, dir, model) {
+    const state = {
+        r: baseState.r,
+        c: baseState.c,
+        dir,
+        coins: baseState.coins,
+        coinCount: baseState.coinCount,
+        blue: [...baseState.blue],
+        pink: [...baseState.pink]
+    };
+
+    const nr = state.r + SOLVER_DR[dir];
+    const nc = state.c + SOLVER_DC[dir];
+
+    if (!solverInside(model, nr, nc)) return null;
+
+    const next = solverCell(model, nr, nc);
+
+    if (model.ramps.has(next)) {
+        const newDir = solverRampTurn(model.ramps.get(next), dir);
+        if (newDir === null) return null;
+
+        state.dir = newDir;
+        state.r = nr + SOLVER_DR[newDir];
+        state.c = nc + SOLVER_DC[newDir];
+
+        if (!solverInside(model, state.r, state.c)) return { type: "dead" };
+
+        const destination = solverCell(model, state.r, state.c);
+
+        if (destination === model.goal) return { type: "won", state };
+        if (model.voids.has(destination)) return { type: "dead" };
+        if (solverIsWall(state, destination, model)) return { type: "stable", state };
+
+        return solverAutomatic(state, model);
+    }
+
+    if (solverContains(state.blue, next) || solverContains(state.pink, next)) {
+        const isPink = solverContains(state.pink, next);
+        const array = isPink ? state.pink : state.blue;
+        const index = array.indexOf(next);
+
+        if (!solverCanPush(state, next, dir, model)) return null;
+
+        const br = solverRow(model, next);
+        const bc = solverCol(model, next);
+
+        const destination = solverCell(
+            model,
+            br + SOLVER_DR[dir],
+            bc + SOLVER_DC[dir]
+        );
+
+        solverMoveBlock(state, array, index, destination);
+        state.r = br;
+        state.c = bc;
+        solverCollect(state, solverCell(model, state.r, state.c), model);
+
+        if (isPink) {
+            let blockPosition = destination;
+
+            while (solverCanPush(state, blockPosition, dir, model)) {
+                const currentR = solverRow(model, blockPosition);
+                const currentC = solverCol(model, blockPosition);
+                const blockDestination = solverCell(
+                    model,
+                    currentR + SOLVER_DR[dir],
+                    currentC + SOLVER_DC[dir]
+                );
+
+                const blockIndex = state.pink.indexOf(blockPosition);
+                if (blockIndex === -1) return { type: "loop" };
+
+                solverMoveBlock(state, state.pink, blockIndex, blockDestination);
+                state.r = currentR;
+                state.c = currentC;
+                solverCollect(state, solverCell(model, state.r, state.c), model);
+                blockPosition = blockDestination;
             }
         }
 
-        if (
-            event.key === "r" ||
-            event.key === "R" ||
-            event.key === "Enter"
-        ) {
-            if (
-                state === "playing"
-            ) {
-                reset();
+        return { type: "stable", state };
+    }
+
+    if (solverIsWall(state, next, model)) return null;
+
+    state.r = nr;
+    state.c = nc;
+
+    if (next === model.goal) return { type: "won", state };
+    if (model.voids.has(next)) return { type: "dead" };
+
+    return solverAutomatic(state, model);
+}
+
+function serializeSolution(solution) {
+    return solution.map(step => SOLVER_DIR_NAMES[step]).join(" → ");
+}
+
+function updateSolverStats(explored, queueSize, depth) {
+    void explored;
+    void queueSize;
+    void depth;
+}
+
+function solveLevel(codeStr) {
+    return new Promise(resolve => {
+        const model = buildSolverModel(codeStr);
+
+        const initial = {
+            r: solverRow(model, model.start),
+            c: solverCol(model, model.start),
+            dir: 1,
+            coins: 0n,
+            coinCount: 0,
+            blue: solverCanonicalPositions(model.blue),
+            pink: solverCanonicalPositions(model.pink)
+        };
+
+        const initialKey = solverStateKey(initial);
+        const queue = [initial];
+        const parents = [null];
+        const actions = [null];
+        const visited = new Set([initialKey]);
+        const nodes = [initial];
+
+        let head = 0;
+        let explored = 0;
+        let depth = 0;
+
+        const reconstruct = index => {
+            const result = [];
+
+            while (index !== 0) {
+                result.push(actions[index]);
+                index = parents[index];
             }
-        }
-    },
-    {
-        passive: false
-    }
-);
 
-backBtn.addEventListener(
-    "click",
-    () => {
-        if (
-            state === "won" ||
-            state === "deathFade" ||
-            state === "deadWait" ||
-            state === "deadBlack"
-        ) {
+            result.reverse();
+            return result;
+        };
+
+        const processBatch = () => {
+            const batchStart = performance.now();
+            let localDepth = depth;
+
+            while (head < nodes.length && performance.now() - batchStart < 8) {
+                const index = head++;
+                const current = nodes[index];
+                explored++;
+
+                localDepth = Math.max(localDepth, current.depth || 0);
+
+                for (let dir = 0; dir < 4; dir++) {
+                    const result = solverApplyInput(current.state, dir, model);
+
+                    if (!result) continue;
+                    if (result.type === "dead" || result.type === "loop") continue;
+
+                    const newState = result.state;
+
+                    if (result.type === "won") {
+                        const finalIndex = nodes.length;
+                        parents[finalIndex] = index;
+                        actions[finalIndex] = dir;
+                        const solution = reconstruct(finalIndex);
+
+                        resolve({
+                            solution,
+                            explored,
+                            depth: solution.length
+                        });
+                        return;
+                    }
+
+                    const key = solverStateKey(newState);
+                    if (visited.has(key)) continue;
+
+                    visited.add(key);
+
+                    const node = {
+                        state: newState,
+                        depth: (current.depth || 0) + 1
+                    };
+
+                    const nodeIndex = nodes.length;
+                    nodes.push(node);
+                    parents[nodeIndex] = index;
+                    actions[nodeIndex] = dir;
+                }
+            }
+
+            depth = localDepth;
+            updateSolverStats(explored, nodes.length - head, depth);
+
+            if (head >= nodes.length) {
+                resolve({
+                    solution: null,
+                    explored,
+                    depth: 0
+                });
+                return;
+            }
+
+            setTimeout(processBatch, 0);
+        };
+
+        nodes[0] = { state: initial, depth: 0 };
+        updateSolverStats(0, 1, 0);
+        processBatch();
+    });
+}
+
+function directionFromSolverIndex(index) {
+    return [
+        directions.ArrowUp,
+        directions.ArrowRight,
+        directions.ArrowDown,
+        directions.ArrowLeft
+    ][index];
+}
+
+async function playSolutionMacro() {
+    if (!solutionMacro.length || macroPlaying) return;
+
+    macroPlaying = true;
+    solveBtn.disabled = true;
+
+    reset();
+
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    for (let i = 0; i < solutionMacro.length; i++) {
+        if (state !== "playing") break;
+
+        launch(directionFromSolverIndex(solutionMacro[i]));
+
+        await new Promise(resolve => {
+            const started = performance.now();
+
+            const wait = () => {
+                if (state !== "playing" || !moving) {
+                    resolve();
+                    return;
+                }
+
+                if (performance.now() - started > 10000) {
+                    resolve();
+                    return;
+                }
+
+                requestAnimationFrame(wait);
+            };
+
+            wait();
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+
+    macroPlaying = false;
+    solveBtn.disabled = false;
+    canvas.focus();
+}
+
+function formatSolverSequence(solution) {
+    if (!solution || !solution.length) return "";
+    const rotations = [0, 90, 180, 270];
+    return solution.map(dir =>
+        `<img class="solution-arrow" src="assets/arrow.png" alt="" style="transform:rotate(${rotations[dir]}deg)">`
+    ).join("");
+}
+
+async function runSolver() {
+    if (
+        solverBusy ||
+        transitionBusy ||
+        macroPlaying ||
+        state !== "playing" ||
+        !currentLevelCode
+    ) return;
+
+    if (!confirm("Are you sure you want to show the win sequence? This will spoil the level.")) return;
+
+    solverBusy = true;
+    solveBtn.disabled = true;
+    solveBtn.classList.add("solving");
+    hideLevelCompletePopup();
+    hideSolverResultPopup();
+
+    await new Promise(resolve => setTimeout(resolve, 30));
+
+    try {
+        const result = await solveLevel(currentLevelCode);
+
+        if (!result.solution) {
+            solutionMacro = [];
+            solverResultTitle.textContent = "No Solution";
+            solverMoveCount.textContent = "";
+            solverSequence.innerHTML = "";
+            solverPlayBtn.style.display = "none";
+            showSolverResultPopup();
+            solveBtn.disabled = false;
+            solveBtn.classList.remove("solving");
             return;
         }
 
-        exitLevel();
-    }
-);
-
-restartBtn.addEventListener(
-    "click",
-    () => {
-        if (
-            transitionBusy ||
-            state === "won" ||
-            state === "deathFade" ||
-            state === "deadWait" ||
-            state === "deadBlack"
-        ) {
-            return;
-        }
-
-        reset();
-        canvas.focus();
-    }
-);
-
-levelCompleteExit.addEventListener(
-    "click",
-    () => {
-        if (transitionBusy) {
-            return;
-        }
-
-        exitLevel();
-    }
-);
-
-canvas.addEventListener(
-    "click",
-    () => {
-        if (
-            state === "playing"
-        ) {
-            canvas.focus();
+        solutionMacro = result.solution;
+        solverResultTitle.textContent = "Solution";
+        solverMoveCount.textContent = `Number of moves: ${result.solution.length}`;
+        solverSequence.innerHTML = formatSolverSequence(result.solution);
+        solverPlayBtn.style.display = "inline-block";
+        showSolverResultPopup();
+    } catch (err) {
+        console.error("Solver error:", err);
+        solverResultTitle.textContent = "Solver Error";
+        solverSequence.innerHTML = `<span style="font-family:Roboto,sans-serif;font-size:16px;color:#fff;letter-spacing:0">${String(err?.message || err).replace(/[&<>\"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}</span>`;
+        solverPlayBtn.style.display = "none";
+        showSolverResultPopup();
+        solveBtn.disabled = false;
+        solveBtn.classList.remove("solving");
+    } finally {
+        solverBusy = false;
+        if (solutionMacro.length) {
+            solveBtn.disabled = false;
+            solveBtn.classList.remove("solving");
         }
     }
-);
+}
+
+solveBtn.addEventListener("click", runSolver);
 
 chooseSplashText();
 
@@ -3219,7 +2790,6 @@ loadLevelsData().then(() => {
     showMenu();
     requestAnimationFrame(update);
 });
-
 })();
 </script>
 
